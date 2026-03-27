@@ -49,23 +49,23 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.955 0 0);
+  --foreground: oklch(0.13 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.13 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.13 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.965 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.965 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.918 0 0);
+  --input: oklch(0.918 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -126,5 +126,29 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+  }
+
+  /* Elevated card shadow — applies to all rounded card containers */
+  .rounded-xl.border.bg-card {
+    box-shadow:
+      0 1px 2px 0 rgb(0 0 0 / 0.04),
+      0 2px 8px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Table / overflow-hidden containers */
+  .rounded-xl.border.overflow-hidden {
+    box-shadow:
+      0 1px 2px 0 rgb(0 0 0 / 0.04),
+      0 2px 8px 0 rgb(0 0 0 / 0.06);
+  }
+
+  /* Hover lift for interactive card rows */
+  .rounded-xl.border.bg-card.hover\:bg-accent\/30:hover {
+    box-shadow:
+      0 2px 4px 0 rgb(0 0 0 / 0.06),
+      0 4px 16px 0 rgb(0 0 0 / 0.08);
+    transform: translateY(-1px);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
   }
 }
