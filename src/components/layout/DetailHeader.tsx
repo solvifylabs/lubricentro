@@ -9,8 +9,10 @@ interface DetailHeaderProps {
   backHref: string
   backLabel: string
   icon: LucideIcon
-  /** Tailwind gradient classes for the icon bg, e.g. "from-blue-500 to-indigo-600" */
+  /** Tailwind gradient classes for the icon bg, e.g. "from-yellow-400 to-yellow-500" */
   gradient?: string
+  /** Use dark icon text — set true when gradient is light (e.g. yellow) */
+  iconTextDark?: boolean
   actions?: ReactNode
 }
 
@@ -20,7 +22,8 @@ export function DetailHeader({
   backHref,
   backLabel,
   icon: Icon,
-  gradient = "from-blue-500 to-indigo-600",
+  gradient = "from-yellow-400 to-yellow-500",
+  iconTextDark = true,
   actions,
 }: DetailHeaderProps) {
   return (
@@ -47,9 +50,9 @@ export function DetailHeader({
           <div className="flex items-center gap-4 min-w-0">
             {/* Gradient icon */}
             <div
-              className={`flex items-center justify-center w-11 h-11 rounded-2xl bg-linear-to-br ${gradient} shadow-lg shadow-blue-500/20 shrink-0`}
+              className={`flex items-center justify-center w-11 h-11 rounded-2xl bg-linear-to-br ${gradient} shadow-lg shadow-black/15 shrink-0`}
             >
-              <Icon className="h-5 w-5 text-white" />
+              <Icon className={`h-5 w-5 ${iconTextDark ? "text-gray-950" : "text-white"}`} />
             </div>
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight leading-tight">{title}</h1>

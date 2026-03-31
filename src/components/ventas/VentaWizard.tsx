@@ -156,9 +156,9 @@ export function VentaWizard({
             Ventas
           </Link>
         </Button>
-        <div className="flex items-center gap-2 bg-linear-to-r from-indigo-600 to-violet-600 px-4 py-1.5 rounded-xl shadow-md shadow-indigo-500/25">
-          <ShoppingCart className="h-3.5 w-3.5 text-white" />
-          <h1 className="text-sm font-bold tracking-tight text-white whitespace-nowrap">
+        <div className="flex items-center gap-2 bg-linear-to-r from-yellow-400 to-yellow-500 px-4 py-1.5 rounded-xl shadow-md shadow-yellow-400/25">
+          <ShoppingCart className="h-3.5 w-3.5 text-gray-950" />
+          <h1 className="text-sm font-bold tracking-tight text-gray-950 whitespace-nowrap">
             Nueva venta
           </h1>
         </div>
@@ -183,9 +183,9 @@ export function VentaWizard({
                   className={cn(
                     "flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold transition-all duration-200",
                     done
-                      ? "bg-linear-to-r from-indigo-600 to-violet-600 text-white"
+                      ? "bg-linear-to-r from-yellow-400 to-yellow-500 text-gray-950"
                       : active
-                      ? "bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25"
+                      ? "bg-linear-to-r from-yellow-400 to-yellow-500 text-gray-950 shadow-md shadow-yellow-400/25"
                       : "bg-muted text-muted-foreground"
                   )}
                 >
@@ -204,7 +204,7 @@ export function VentaWizard({
                 <div
                   className={cn(
                     "flex-1 h-px mx-4 transition-colors duration-300",
-                    step > s.id ? "bg-indigo-400" : "bg-border"
+                    step > s.id ? "bg-yellow-400" : "bg-border"
                   )}
                 />
               )}
@@ -228,14 +228,14 @@ export function VentaWizard({
           {/* ── STEP 1: Cliente ── */}
           {step === 1 && (
             <div className="rounded-2xl border bg-card overflow-hidden h-full flex flex-col">
-              <div className="h-1 bg-linear-to-r from-indigo-500 to-violet-600 shrink-0" />
+              <div className="h-1 bg-linear-to-r from-yellow-400 to-yellow-500 shrink-0" />
               <div className="px-5 py-3 border-b flex items-center gap-2 shrink-0">
-                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/10">
-                  <User className="h-3.5 w-3.5 text-indigo-500" />
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+                  <User className="h-3.5 w-3.5 text-yellow-500" />
                 </div>
                 <p className="font-semibold text-sm">Seleccionar cliente</p>
                 {selectedClient && (
-                  <span className="ml-auto text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-full font-medium">
+                  <span className="ml-auto text-xs bg-yellow-50 dark:bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 px-2.5 py-1 rounded-full font-medium">
                     {selectedClient.firstName} {selectedClient.lastName ?? ""}
                   </span>
                 )}
@@ -256,7 +256,7 @@ export function VentaWizard({
                       className={cn(
                         "w-full text-left px-4 py-3 rounded-xl border text-sm transition-all duration-150",
                         selectedClient?.id === c.id
-                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30"
+                          ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-400/10"
                           : "border-transparent hover:bg-muted/60 hover:border-border"
                       )}
                     >
@@ -265,7 +265,7 @@ export function VentaWizard({
                           {c.firstName} {c.lastName ?? ""}
                         </span>
                         {selectedClient?.id === c.id && (
-                          <Check className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                          <Check className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         )}
                       </div>
                     </button>
@@ -304,14 +304,14 @@ export function VentaWizard({
           {/* ── STEP 2: Productos ── */}
           {step === 2 && (
             <div className="rounded-2xl border bg-card overflow-hidden h-full flex flex-col">
-              <div className="h-1 bg-linear-to-r from-indigo-500 to-violet-600 shrink-0" />
+              <div className="h-1 bg-linear-to-r from-yellow-400 to-yellow-500 shrink-0" />
               <div className="px-5 py-3 border-b flex items-center gap-2 shrink-0">
-                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-500/10">
-                  <Package className="h-3.5 w-3.5 text-violet-500" />
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+                  <Package className="h-3.5 w-3.5 text-yellow-500" />
                 </div>
                 <p className="font-semibold text-sm">Agregar productos</p>
                 {items.length > 0 && (
-                  <span className="ml-auto text-xs bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 px-2.5 py-1 rounded-full font-medium">
+                  <span className="ml-auto text-xs bg-yellow-50 dark:bg-yellow-400/10 text-yellow-600 dark:text-yellow-400 px-2.5 py-1 rounded-full font-medium">
                     {items.length} producto{items.length !== 1 ? "s" : ""}
                   </span>
                 )}
@@ -440,10 +440,10 @@ export function VentaWizard({
           {/* ── STEP 3: Resumen ── */}
           {step === 3 && (
             <div className="rounded-2xl border bg-card overflow-hidden h-full flex flex-col">
-              <div className="h-1 bg-linear-to-r from-indigo-500 to-violet-600 shrink-0" />
+              <div className="h-1 bg-linear-to-r from-yellow-400 to-yellow-500 shrink-0" />
               <div className="px-5 py-3 border-b flex items-center gap-2 shrink-0">
-                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-yellow-500" />
                 </div>
                 <p className="font-semibold text-sm">Confirmar venta</p>
               </div>
@@ -451,8 +451,8 @@ export function VentaWizard({
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
                   {/* Client summary */}
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/40 border">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 shrink-0">
-                      <User className="h-4 w-4 text-indigo-500" />
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+                      <User className="h-4 w-4 text-yellow-500" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Cliente</p>
@@ -526,7 +526,7 @@ export function VentaWizard({
                   <Button
                     onClick={handleConfirm}
                     disabled={loading}
-                    className="gap-2 bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25 hover:opacity-90 transition-opacity"
+                    className="gap-2 bg-linear-to-r from-yellow-400 to-yellow-500 text-gray-950 shadow-md shadow-yellow-400/25 hover:opacity-90 transition-opacity"
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

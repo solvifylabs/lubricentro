@@ -46,8 +46,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-5 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
-            <Droplets className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-yellow-400 shadow-lg shadow-yellow-400/25">
+            <Droplets className="h-5 w-5 text-gray-950" />
           </div>
           <div>
             <h1 className="text-sm font-bold text-white tracking-tight">Lavalle</h1>
@@ -72,14 +72,14 @@ export function Sidebar() {
                 className={cn(
                   "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "text-white"
+                    ? "text-gray-950"
                     : "text-gray-400 hover:text-gray-100 hover:bg-white/5"
                 )}
               >
                 {isActive && (
                   <motion.div
                     layoutId="sidebar-active"
-                    className="absolute inset-0 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 shadow-md shadow-blue-500/20"
+                    className="absolute inset-0 rounded-lg bg-yellow-400 shadow-md shadow-yellow-400/20"
                     transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   />
                 )}

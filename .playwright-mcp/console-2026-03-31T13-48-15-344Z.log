@@ -1,0 +1,62 @@
+[    1563ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[    1716ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  105354ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  105766ms] [LOG] [Fast Refresh] done in 423ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  111066ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  111145ms] [LOG] [Fast Refresh] done in 162ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  117944ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  118186ms] [LOG] [Fast Refresh] done in 298ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  126029ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  126087ms] [LOG] [Fast Refresh] done in 130ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  142146ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  142343ms] [LOG] [Fast Refresh] done in 266ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  156356ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  156531ms] [LOG] [Fast Refresh] done in 238ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  156649ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  156978ms] [LOG] [Fast Refresh] done in 436ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  168636ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  168786ms] [LOG] [Fast Refresh] done in 214ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  168902ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  169161ms] [LOG] [Fast Refresh] done in 364ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  169265ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  169283ms] [LOG] [Fast Refresh] done in 120ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  175105ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  175139ms] [LOG] [Fast Refresh] done in 103ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  175259ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  175545ms] [LOG] [Fast Refresh] done in 401ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  199323ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  199550ms] [LOG] [Fast Refresh] done in 318ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  199657ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  199962ms] [LOG] [Fast Refresh] done in 409ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  200072ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  200084ms] [LOG] [Fast Refresh] done in 115ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  214926ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  215118ms] [LOG] [Fast Refresh] done in 267ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  215231ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  215642ms] [LOG] [Fast Refresh] done in 518ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  601918ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  602338ms] [LOG] [Fast Refresh] done in 532ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  624302ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  624838ms] [LOG] [Fast Refresh] done in 648ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  626349ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  626419ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  629604ms] [WARNING] The resource http://localhost:3000/_next/static/media/fba5a26ea33df6a3-s.p.0eehd8tgys7nv.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/:0
+[  629607ms] [WARNING] The resource http://localhost:3000/_next/static/media/051742360c26797e-s.p.0f97p8c3305p~.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/:0
+[  656568ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  656669ms] [LOG] [Fast Refresh] done in 193ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  656815ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  657480ms] [LOG] [Fast Refresh] done in 775ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  657733ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  657747ms] [LOG] [Fast Refresh] done in 121ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  657934ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  658077ms] [LOG] [Fast Refresh] done in 244ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  658216ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  658425ms] [LOG] [Fast Refresh] done in 310ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  662933ms] [WARNING] The resource http://localhost:3000/_next/static/media/fba5a26ea33df6a3-s.p.0eehd8tgys7nv.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/:0
+[  662933ms] [WARNING] The resource http://localhost:3000/_next/static/media/051742360c26797e-s.p.0f97p8c3305p~.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/:0
+[  693634ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  693683ms] [LOG] [Fast Refresh] done in 149ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  699587ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  699635ms] [LOG] [Fast Refresh] done in 163ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  711357ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431
+[  711541ms] [LOG] [Fast Refresh] done in 240ms @ http://localhost:3000/_next/static/chunks/0z_g_next_dist_0v7z86-._.js:2431

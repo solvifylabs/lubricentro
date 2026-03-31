@@ -77,17 +77,18 @@ export default async function DashboardPage() {
       value: stats.totalProducts,
       icon: "Package" as const,
       href: "/stock",
-      gradient: "bg-linear-to-br from-blue-500 to-blue-700",
-      shadow: "shadow-lg shadow-blue-500/30",
+      gradient: "bg-linear-to-br from-yellow-400 to-yellow-500",
+      shadow: "shadow-lg shadow-yellow-400/30",
       trend: "Total en inventario",
+      textDark: true,
     },
     {
       title: "Clientes",
       value: stats.totalClients,
       icon: "Users" as const,
       href: "/clientes",
-      gradient: "bg-linear-to-br from-emerald-500 to-teal-600",
-      shadow: "shadow-lg shadow-emerald-500/30",
+      gradient: "bg-linear-to-br from-zinc-800 to-zinc-950",
+      shadow: "shadow-lg shadow-black/40",
       trend: "Clientes activos",
     },
     {
@@ -95,17 +96,18 @@ export default async function DashboardPage() {
       value: stats.todayServices,
       icon: "Wrench" as const,
       href: "/servicios",
-      gradient: "bg-linear-to-br from-orange-500 to-amber-600",
-      shadow: "shadow-lg shadow-orange-500/30",
+      gradient: "bg-linear-to-br from-amber-400 to-yellow-500",
+      shadow: "shadow-lg shadow-amber-400/30",
       trend: "Realizados hoy",
+      textDark: true,
     },
     {
       title: "Ventas hoy",
       value: stats.todaySales,
       icon: "ShoppingCart" as const,
       href: "/ventas",
-      gradient: "bg-linear-to-br from-violet-500 to-purple-700",
-      shadow: "shadow-lg shadow-violet-500/30",
+      gradient: "bg-linear-to-br from-gray-800 to-gray-950",
+      shadow: "shadow-lg shadow-black/40",
       trend: "Completadas hoy",
     },
   ]
@@ -168,8 +170,8 @@ export default async function DashboardPage() {
         {/* Recent services */}
         <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-4 border-b">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10">
-              <Wrench className="h-4 w-4 text-blue-500" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+              <Wrench className="h-4 w-4 text-yellow-500" />
             </div>
             <h2 className="text-sm font-semibold">Últimos servicios</h2>
           </div>
@@ -208,8 +210,8 @@ export default async function DashboardPage() {
         {/* Recent sales */}
         <div className="lg:col-span-2 rounded-2xl border bg-card shadow-sm overflow-hidden">
           <div className="flex items-center gap-2.5 px-5 py-4 border-b">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-500/10">
-              <Receipt className="h-4 w-4 text-violet-500" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+              <Receipt className="h-4 w-4 text-yellow-500" />
             </div>
             <h2 className="text-sm font-semibold">Últimas ventas</h2>
             <Link
@@ -247,7 +249,7 @@ export default async function DashboardPage() {
                         })}
                       </p>
                     </div>
-                    <span className="ml-3 shrink-0 text-sm font-semibold tabular-nums text-violet-600 dark:text-violet-400">
+                    <span className="ml-3 shrink-0 text-sm font-semibold tabular-nums text-yellow-600 dark:text-yellow-400">
                       ${Number(v.total).toLocaleString("es-AR")}
                     </span>
                   </Link>
@@ -258,11 +260,11 @@ export default async function DashboardPage() {
         </div>
 
         {/* Quick new sale CTA */}
-        <div className="lg:col-span-2 rounded-2xl overflow-hidden bg-linear-to-r from-indigo-600 to-violet-600 p-px shadow-lg shadow-indigo-500/20">
+        <div className="lg:col-span-2 rounded-2xl overflow-hidden bg-yellow-400 p-px shadow-lg shadow-yellow-400/20">
           <div className="rounded-[calc(1rem-1px)] bg-card px-6 py-5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-br from-indigo-600 to-violet-600 shadow-md shadow-indigo-500/25">
-                <ShoppingCart className="h-5 w-5 text-white" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-yellow-400 shadow-md shadow-yellow-400/25">
+                <ShoppingCart className="h-5 w-5 text-gray-950" />
               </div>
               <div>
                 <p className="font-semibold">Registrar nueva venta</p>
@@ -271,7 +273,7 @@ export default async function DashboardPage() {
             </div>
             <Button
               asChild
-              className="shrink-0 gap-2 bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25 hover:opacity-90 transition-opacity"
+              className="shrink-0 gap-2 bg-yellow-400 text-gray-950 shadow-md shadow-yellow-400/25 hover:bg-yellow-300 transition-colors"
             >
               <Link href="/ventas/nueva">
                 <Plus className="h-4 w-4" />

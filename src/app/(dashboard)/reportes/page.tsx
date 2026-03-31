@@ -187,25 +187,27 @@ export default async function ReportesPage({
       label: "Ventas",
       value: `$${ventasTotal.toLocaleString("es-AR")}`,
       sub: `${data.salesAgg._count} transacciones`,
-      gradient: "bg-linear-to-br from-blue-500 to-blue-700",
-      shadow: "shadow-lg shadow-blue-500/30",
+      gradient: "bg-linear-to-br from-yellow-400 to-yellow-500",
+      shadow: "shadow-lg shadow-yellow-400/30",
       icon: "TrendingUp" as const,
+      textDark: true,
     },
     {
       label: "Servicios",
       value: `$${serviciosTotal.toLocaleString("es-AR")}`,
       sub: `${data.servicesAgg._count} servicios`,
-      gradient: "bg-linear-to-br from-orange-500 to-amber-600",
-      shadow: "shadow-lg shadow-orange-500/30",
+      gradient: "bg-linear-to-br from-zinc-800 to-zinc-950",
+      shadow: "shadow-lg shadow-black/40",
       icon: "Wrench" as const,
     },
     {
       label: "Ingreso total",
       value: `$${ingresoTotal.toLocaleString("es-AR")}`,
       sub: "Ventas + Servicios",
-      gradient: "bg-linear-to-br from-emerald-500 to-teal-600",
-      shadow: "shadow-lg shadow-emerald-500/30",
+      gradient: "bg-linear-to-br from-amber-400 to-yellow-500",
+      shadow: "shadow-lg shadow-amber-400/30",
       icon: "DollarSign" as const,
+      textDark: true,
     },
     {
       label: "Stock bajo",
@@ -267,13 +269,13 @@ export default async function ReportesPage({
                       </span>
                       <span className="text-sm font-medium truncate max-w-45">{p.name}</span>
                     </div>
-                    <span className="text-sm font-semibold tabular-nums text-blue-600 dark:text-blue-400">
+                    <span className="text-sm font-semibold tabular-nums text-yellow-600 dark:text-yellow-400">
                       {p.quantity} u.
                     </span>
                   </div>
                   <div className="ml-6 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-linear-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                      className="h-full bg-linear-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500"
                       style={{ width: `${Math.round((p.quantity / maxProduct) * 100)}%` }}
                     />
                   </div>
@@ -303,7 +305,7 @@ export default async function ReportesPage({
                       <span className="text-sm font-medium truncate max-w-40">{c.name}</span>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                      <p className="text-sm font-semibold tabular-nums text-yellow-600 dark:text-yellow-400">
                         ${c.total.toLocaleString("es-AR")}
                       </p>
                       <p className="text-xs text-muted-foreground">{c.count} compra{c.count !== 1 ? "s" : ""}</p>
@@ -311,7 +313,7 @@ export default async function ReportesPage({
                   </div>
                   <div className="ml-6 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-linear-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                      className="h-full bg-linear-to-r from-yellow-400 to-yellow-500 rounded-full transition-all duration-500"
                       style={{ width: `${Math.round((c.total / maxClient) * 100)}%` }}
                     />
                   </div>

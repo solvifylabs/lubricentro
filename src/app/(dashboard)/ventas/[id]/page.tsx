@@ -37,15 +37,15 @@ export default async function VentaDetailPage({
         backHref="/ventas"
         backLabel="Ventas"
         icon={ShoppingCart}
-        gradient="from-indigo-500 to-violet-600"
+        gradient="from-yellow-400 to-yellow-500"
         actions={isCompleted ? <CancelSaleButton saleId={sale.id} /> : undefined}
       />
 
       {/* Status + client */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${isCompleted ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-rose-50 dark:bg-rose-500/10"}`}>
-            <ShoppingCart className={`h-4 w-4 ${isCompleted ? "text-emerald-500" : "text-rose-500"}`} />
+          <div className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${isCompleted ? "bg-yellow-50 dark:bg-yellow-400/10" : "bg-rose-50 dark:bg-rose-500/10"}`}>
+            <ShoppingCart className={`h-4 w-4 ${isCompleted ? "text-yellow-500" : "text-rose-500"}`} />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Estado</p>
@@ -55,8 +55,8 @@ export default async function VentaDetailPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <User className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <User className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Cliente</p>

@@ -71,8 +71,8 @@ export default async function VehiculosPage({
       {/* Stats strip */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <Car className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Car className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total vehículos</p>
@@ -127,7 +127,7 @@ export default async function VehiculosPage({
             {vehicles.map((v: Vehiculo & { client: Pick<Cliente, "id" | "firstName" | "lastName"> | null; _count: { services: number } }) => (
               <TableRow key={v.id}>
                 <TableCell>
-                  <span className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-md text-sm">
+                  <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm">
                     {v.plate}
                   </span>
                 </TableCell>

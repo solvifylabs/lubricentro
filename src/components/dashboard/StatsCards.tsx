@@ -15,6 +15,7 @@ interface StatCard {
   gradient: string
   shadow: string
   trend?: string
+  textDark?: boolean
 }
 
 interface StatsCardsProps {
@@ -45,6 +46,9 @@ export function StatsCards({ cards }: StatsCardsProps) {
     >
       {cards.map((card) => {
         const Icon = iconMap[card.icon]
+        const fg = card.textDark ? "text-gray-950" : "text-white"
+        const fgMuted = card.textDark ? "text-gray-950/60" : "text-white/70"
+        const iconBg = card.textDark ? "bg-black/15" : "bg-white/20"
         return (
           <motion.div key={card.href} variants={item}>
             <Link href={card.href} className="block group">
@@ -57,16 +61,16 @@ export function StatsCards({ cards }: StatsCardsProps) {
 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                    <p className={`text-xs font-semibold ${fgMuted} uppercase tracking-wider`}>
                       {card.title}
                     </p>
-                    <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/20">
-                      <Icon className="h-4 w-4 text-white" />
+                    <div className={`flex items-center justify-center w-8 h-8 rounded-xl ${iconBg}`}>
+                      <Icon className={`h-4 w-4 ${fg}`} />
                     </div>
                   </div>
-                  <p className="text-4xl font-bold text-white tracking-tight">{card.value}</p>
+                  <p className={`text-4xl font-bold ${fg} tracking-tight`}>{card.value}</p>
                   {card.trend && (
-                    <p className="text-xs text-white/60 mt-1.5">{card.trend}</p>
+                    <p className={`text-xs ${fgMuted} mt-1.5`}>{card.trend}</p>
                   )}
                 </div>
               </div>

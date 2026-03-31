@@ -50,7 +50,7 @@ export default async function ClienteDetailPage({
         backHref="/clientes"
         backLabel="Clientes"
         icon={User}
-        gradient="from-emerald-500 to-teal-600"
+        gradient="from-yellow-400 to-yellow-500"
         actions={
           <div className="flex gap-2">
             {client.phone && <WhatsAppButton phone={client.phone} />}
@@ -66,8 +66,8 @@ export default async function ClienteDetailPage({
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <Car className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Car className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Vehículos</p>
@@ -84,8 +84,8 @@ export default async function ClienteDetailPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-            <ShoppingCart className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <ShoppingCart className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Compras</p>
@@ -99,7 +99,7 @@ export default async function ClienteDetailPage({
         {client.phone && (
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Teléfono</p>
-            <a href={`tel:${client.phone}`} className="flex items-center gap-1.5 font-medium text-green-600 hover:underline">
+            <a href={`tel:${client.phone}`} className="flex items-center gap-1.5 font-medium text-yellow-700 hover:underline">
               <Phone className="h-3.5 w-3.5" /> {client.phone}
             </a>
           </div>
@@ -120,11 +120,11 @@ export default async function ClienteDetailPage({
         )}
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Total en servicios</p>
-          <p className="font-semibold tabular-nums text-emerald-600">${totalServiceAmount.toLocaleString("es-AR")}</p>
+          <p className="font-semibold tabular-nums text-yellow-600">${totalServiceAmount.toLocaleString("es-AR")}</p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Total en compras</p>
-          <p className="font-semibold tabular-nums text-emerald-600">${totalSaleAmount.toLocaleString("es-AR")}</p>
+          <p className="font-semibold tabular-nums text-yellow-600">${totalSaleAmount.toLocaleString("es-AR")}</p>
         </div>
       </div>
 
@@ -152,7 +152,7 @@ export default async function ClienteDetailPage({
             client.vehicles.map((v: Vehiculo) => (
               <div key={v.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
-                  <span className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-md text-sm">
+                  <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm">
                     {v.plate}
                   </span>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -178,7 +178,7 @@ export default async function ClienteDetailPage({
               <div key={s.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-md text-xs">
+                    <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-xs">
                       {s.vehicle.plate}
                     </span>
                     <span className="text-sm text-muted-foreground">{s.vehicle.brand} {s.vehicle.model}</span>

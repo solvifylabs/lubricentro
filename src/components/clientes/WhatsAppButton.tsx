@@ -13,7 +13,7 @@ export function WhatsAppButton({ phone, message, label = "WhatsApp" }: WhatsAppB
   const url = `https://wa.me/${cleanPhone}${encodedMsg ? `?text=${encodedMsg}` : ""}`
 
   return (
-    <Button asChild variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
+    <Button asChild variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50 dark:text-yellow-400 dark:border-yellow-400/30 dark:hover:bg-yellow-400/10">
       <a href={url} target="_blank" rel="noopener noreferrer">
         <MessageCircle className="mr-2 h-4 w-4" />
         {label}

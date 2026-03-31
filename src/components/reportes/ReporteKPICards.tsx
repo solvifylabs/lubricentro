@@ -10,6 +10,7 @@ interface KPI {
   gradient: string
   shadow: string
   icon: "TrendingUp" | "Wrench" | "DollarSign" | "PackageX"
+  textDark?: boolean
 }
 
 const iconMap = { TrendingUp, Wrench, DollarSign, PackageX }
@@ -38,6 +39,9 @@ export function ReporteKPICards({ cards }: ReporteKPICardsProps) {
     >
       {cards.map((card) => {
         const Icon = iconMap[card.icon]
+        const fg = card.textDark ? "text-gray-950" : "text-white"
+        const fgMuted = card.textDark ? "text-gray-950/60" : "text-white/70"
+        const iconBg = card.textDark ? "bg-black/15" : "bg-white/20"
         return (
           <motion.div key={card.label} variants={item}>
             <div
@@ -47,15 +51,15 @@ export function ReporteKPICards({ cards }: ReporteKPICardsProps) {
               <div className="absolute -bottom-6 -left-2 w-20 h-20 rounded-full bg-black/10 blur-2xl" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+                  <p className={`text-xs font-semibold ${fgMuted} uppercase tracking-wider`}>
                     {card.label}
                   </p>
-                  <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-white/20">
-                    <Icon className="h-4 w-4 text-white" />
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-xl ${iconBg}`}>
+                    <Icon className={`h-4 w-4 ${fg}`} />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-white tracking-tight">{card.value}</p>
-                <p className="text-xs text-white/60 mt-1">{card.sub}</p>
+                <p className={`text-3xl font-bold ${fg} tracking-tight`}>{card.value}</p>
+                <p className={`text-xs ${fgMuted} mt-1`}>{card.sub}</p>
               </div>
             </div>
           </motion.div>

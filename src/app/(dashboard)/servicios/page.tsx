@@ -90,8 +90,8 @@ export default async function ServiciosPage({
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-500/10 shrink-0">
-            <Wrench className="h-4 w-4 text-orange-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Wrench className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total servicios</p>
@@ -99,8 +99,8 @@ export default async function ServiciosPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <CalendarClock className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <CalendarClock className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Hoy</p>
@@ -108,12 +108,12 @@ export default async function ServiciosPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-            <DollarSign className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <DollarSign className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Facturado hoy</p>
-            <p className="text-lg font-bold tabular-nums text-emerald-600">${todayTotal.toLocaleString("es-AR")}</p>
+            <p className="text-lg font-bold tabular-nums text-yellow-600">${todayTotal.toLocaleString("es-AR")}</p>
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default async function ServiciosPage({
                   {new Date(s.serviceDate).toLocaleDateString("es-AR")}
                 </TableCell>
                 <TableCell>
-                  <Link href={`/vehiculos/${s.vehicle.id}`} className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-md text-sm hover:underline">
+                  <Link href={`/vehiculos/${s.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline">
                     {s.vehicle.plate}
                   </Link>
                   <p className="text-xs text-muted-foreground mt-0.5">{s.vehicle.brand} {s.vehicle.model}</p>

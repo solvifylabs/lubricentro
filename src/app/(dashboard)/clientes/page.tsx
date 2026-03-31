@@ -71,8 +71,8 @@ export default async function ClientesPage({
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-            <Users className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Users className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Clientes</p>
@@ -80,8 +80,8 @@ export default async function ClientesPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <Car className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Car className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Vehículos</p>
@@ -143,7 +143,7 @@ export default async function ClientesPage({
                       href={`https://wa.me/${c.phone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-green-600 hover:text-green-700 hover:underline"
+                      className="flex items-center gap-1.5 text-yellow-700 hover:text-yellow-800 hover:underline"
                     >
                       <Phone className="h-3 w-3" />
                       {c.phone}

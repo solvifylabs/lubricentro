@@ -38,7 +38,7 @@ export default async function ProductoDetailPage({
   const isLowStock = product.stock <= product.minStock
 
   const typeLabel = (type: string) => {
-    if (type === "entry") return { label: "Ingreso", className: "text-emerald-600 font-medium" }
+    if (type === "entry") return { label: "Ingreso", className: "text-yellow-600 font-medium" }
     if (type === "exit") return { label: "Egreso", className: "text-rose-600 font-medium" }
     return { label: "Ajuste", className: "text-amber-600 font-medium" }
   }
@@ -51,14 +51,14 @@ export default async function ProductoDetailPage({
         backHref="/stock"
         backLabel="Stock"
         icon={Package}
-        gradient="from-blue-500 to-indigo-600"
+        gradient="from-yellow-400 to-yellow-500"
       />
 
       {/* Stats strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${isLowStock ? "bg-rose-50 dark:bg-rose-500/10" : "bg-blue-50 dark:bg-blue-500/10"}`}>
-            <Package className={`h-4 w-4 ${isLowStock ? "text-rose-500" : "text-blue-500"}`} />
+          <div className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${isLowStock ? "bg-rose-50 dark:bg-rose-500/10" : "bg-yellow-50 dark:bg-yellow-400/10"}`}>
+            <Package className={`h-4 w-4 ${isLowStock ? "text-rose-500" : "text-yellow-500"}`} />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Stock actual</p>
@@ -79,8 +79,8 @@ export default async function ProductoDetailPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-            <Tag className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Tag className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Precio venta</p>
@@ -88,8 +88,8 @@ export default async function ProductoDetailPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-500/10 shrink-0">
-            <TrendingUp className="h-4 w-4 text-purple-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <TrendingUp className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Movimientos</p>

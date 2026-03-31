@@ -38,8 +38,8 @@ export default function LoginPage() {
     <div className="w-full max-w-sm">
       {/* Logo */}
       <div className="flex flex-col items-center mb-8">
-        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 shadow-xl shadow-blue-500/30 mb-4">
-          <Droplets className="h-7 w-7 text-white" />
+        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-yellow-400 shadow-xl shadow-yellow-400/30 mb-4">
+          <Droplets className="h-7 w-7 text-gray-950" />
         </div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Lavalle</h1>
         <p className="text-sm text-gray-500 mt-1">Sistema de Gestión</p>
@@ -64,7 +64,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-gray-800/60 border-white/8 text-white placeholder:text-gray-600 focus-visible:ring-blue-500/50 focus-visible:border-blue-500/50 h-10"
+              className="bg-gray-800/60 border-white/8 text-white placeholder:text-gray-600 focus-visible:ring-yellow-400/50 focus-visible:border-yellow-400/50 h-10"
             />
           </div>
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-gray-800/60 border-white/8 text-white placeholder:text-gray-600 focus-visible:ring-blue-500/50 focus-visible:border-blue-500/50 h-10"
+              className="bg-gray-800/60 border-white/8 text-white placeholder:text-gray-600 focus-visible:ring-yellow-400/50 focus-visible:border-yellow-400/50 h-10"
             />
           </div>
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full h-10 bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90 transition-opacity text-white shadow-lg shadow-blue-500/25 border-0"
+            className="w-full h-10 bg-yellow-400 hover:bg-yellow-300 transition-colors text-gray-950 font-semibold shadow-lg shadow-yellow-400/25 border-0"
             disabled={loading}
           >
             {loading ? (

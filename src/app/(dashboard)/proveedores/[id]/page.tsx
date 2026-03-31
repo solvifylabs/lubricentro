@@ -38,14 +38,14 @@ export default async function ProveedorDetailPage({
         backHref="/proveedores"
         backLabel="Proveedores"
         icon={Truck}
-        gradient="from-purple-500 to-violet-600"
+        gradient="from-yellow-400 to-yellow-500"
       />
 
       {/* Stats strip */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <Package className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Package className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Productos</p>
@@ -62,8 +62,8 @@ export default async function ProveedorDetailPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-            <Truck className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Truck className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total comprado</p>

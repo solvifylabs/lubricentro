@@ -78,8 +78,8 @@ export default async function StockPage({
       {/* Stats strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <Package className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Package className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Total productos</p>
@@ -96,8 +96,8 @@ export default async function StockPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3 col-span-2 sm:col-span-1">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-500/10 shrink-0">
-            <LayoutGrid className="h-4 w-4 text-purple-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <LayoutGrid className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Categorías</p>
@@ -138,7 +138,7 @@ export default async function StockPage({
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell className="text-muted-foreground font-mono text-xs">{p.code ?? "—"}</TableCell>
                 <TableCell>
-                  <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300">
+                  <span className="inline-flex items-center rounded-md bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">
                     {p.category.name}
                   </span>
                 </TableCell>

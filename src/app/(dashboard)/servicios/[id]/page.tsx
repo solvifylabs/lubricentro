@@ -41,7 +41,7 @@ export default async function ServicioDetailPage({
         backHref="/servicios"
         backLabel="Servicios"
         icon={Wrench}
-        gradient="from-orange-500 to-amber-500"
+        gradient="from-yellow-400 to-yellow-500"
         actions={
           service.client?.phone ? (
             <WhatsAppButton
@@ -57,12 +57,12 @@ export default async function ServicioDetailPage({
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="rounded-xl border bg-card px-4 py-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10">
-              <Car className="h-3.5 w-3.5 text-blue-500" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+              <Car className="h-3.5 w-3.5 text-yellow-500" />
             </div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Vehículo</p>
           </div>
-          <Link href={`/vehiculos/${service.vehicle.id}`} className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-md text-sm hover:underline inline-block mb-1">
+          <Link href={`/vehiculos/${service.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline inline-block mb-1">
             {service.vehicle.plate}
           </Link>
           <p className="text-sm">{service.vehicle.brand} {service.vehicle.model} {service.vehicle.year ? `(${service.vehicle.year})` : ""}</p>
@@ -71,8 +71,8 @@ export default async function ServicioDetailPage({
 
         <div className="rounded-xl border bg-card px-4 py-4">
           <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10">
-              <User className="h-3.5 w-3.5 text-emerald-500" />
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-50 dark:bg-yellow-400/10">
+              <User className="h-3.5 w-3.5 text-yellow-500" />
             </div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Cliente</p>
           </div>

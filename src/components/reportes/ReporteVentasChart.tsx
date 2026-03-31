@@ -64,11 +64,11 @@ export function ReporteVentasChart({ data }: ReporteVentasChartProps) {
       {/* Peak label */}
       {maxPoint && (
         <div className="flex items-center gap-1.5 px-1">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500" />
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400" />
           <span className="text-xs text-muted-foreground">
             Pico: <span className="font-semibold text-foreground">{maxPoint.label}</span>
             {" — "}
-            <span className="text-blue-600 dark:text-blue-400 font-semibold">
+            <span className="text-yellow-600 dark:text-yellow-400 font-semibold">
               ${maxVal.toLocaleString("es-AR")}
             </span>
           </span>

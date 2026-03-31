@@ -48,7 +48,7 @@ export default async function VehiculoDetailPage({
         backHref="/vehiculos"
         backLabel="Vehículos"
         icon={Car}
-        gradient="from-sky-500 to-blue-600"
+        gradient="from-yellow-400 to-yellow-500"
         actions={
           <Button asChild>
             <Link href={`/servicios/nuevo?vehicleId=${vehicle.id}`}>
@@ -61,8 +61,8 @@ export default async function VehiculoDetailPage({
       {/* Stats strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
-            <Wrench className="h-4 w-4 text-blue-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <Wrench className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Servicios</p>
@@ -70,8 +70,8 @@ export default async function VehiculoDetailPage({
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 shrink-0">
-            <CalendarDays className="h-4 w-4 text-emerald-500" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
+            <CalendarDays className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Último service</p>
@@ -95,7 +95,7 @@ export default async function VehiculoDetailPage({
       <div className="rounded-xl border bg-card px-5 py-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Dominio</p>
-          <span className="font-mono font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-md text-sm">
+          <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm">
             {vehicle.plate}
           </span>
         </div>
@@ -114,7 +114,7 @@ export default async function VehiculoDetailPage({
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Cliente</p>
           {vehicle.client ? (
-            <Link href={`/clientes/${vehicle.client.id}`} className="font-medium hover:underline text-blue-600 dark:text-blue-400">
+            <Link href={`/clientes/${vehicle.client.id}`} className="font-medium hover:underline text-yellow-600 dark:text-yellow-400">
               {vehicle.client.firstName} {vehicle.client.lastName ?? ""}
             </Link>
           ) : (

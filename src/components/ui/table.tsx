@@ -34,7 +34,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
     <tbody
       data-slot="table-body"
       className={cn(
-        "[&_tr:last-child]:border-0 [&_tr:nth-child(even)]:bg-blue-50/40 dark:[&_tr:nth-child(even)]:bg-blue-950/10",
+        "[&_tr:last-child]:border-0 [&_tr:nth-child(even)]:bg-yellow-50/40 dark:[&_tr:nth-child(even)]:bg-yellow-400/5",
         className
       )}
       {...props}
@@ -60,7 +60,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors hover:bg-blue-50/60 dark:hover:bg-blue-950/20 data-[state=selected]:bg-muted",
+        "border-b transition-colors hover:bg-yellow-50/60 dark:hover:bg-yellow-400/10 data-[state=selected]:bg-muted",
         className
       )}
       {...props}
@@ -73,7 +73,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wider text-white bg-blue-600 whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wider text-gray-950 bg-yellow-400 whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
