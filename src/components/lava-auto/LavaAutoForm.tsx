@@ -14,15 +14,24 @@ import { toast } from "sonner"
 import {
   Car, Package, CheckCircle2, ArrowRight, ArrowLeft,
   Plus, Minus, Trash2, Loader2, Check, ChevronLeft,
-  Waves, CarFront,
+  Waves, CarFront, Info,
 } from "lucide-react"
-import type { Producto } from "@/types"
+import type { Producto, WashPrices } from "@/types"
+
+type WashType = "interior" | "exterior" | "integro"
 
 type SesionItem = {
   productId: string
   name: string
   quantity: number
+  buyPrice: number
 }
+
+const WASH_OPTIONS: { value: WashType; label: string }[] = [
+  { value: "integro", label: "Íntegro (interior + exterior)" },
+  { value: "exterior", label: "Exterior" },
+  { value: "interior", label: "Interior" },
+]
 
 const STEPS = [
   { id: 1, label: "Vehículo", icon: Car },
@@ -38,21 +47,26 @@ const variants = {
   exit: (dir: number) => ({ x: dir > 0 ? -48 : 48, opacity: 0 }),
 }
 
+function priceForType(prices: WashPrices, type: WashType): number {
+  if (type === "interior") return prices.priceInterior
+  if (type === "exterior") return prices.priceExterior
+  return prices.priceIntegro
+}
+
 export function LavaAutoForm({
   products,
-  defaultWashPrice,
-  activeTurnoId,
+  washPrices,
 }: {
   products: Producto[]
-  defaultWashPrice: number
-  activeTurnoId: string | null
+  washPrices: WashPrices
 }) {
   const router = useRouter()
   const [step, setStep] = useState<StepId>(1)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [plate, setPlate] = useState("")
+  const [washType, setWashType] = useState<WashType>("integro")
   const [items, setItems] = useState<SesionItem[]>([])
-  const [amount, setAmount] = useState(defaultWashPrice)
+  const [amount, setAmount] = useState(washPrices.priceIntegro)
   const [notes, setNotes] = useState("")
   const [productSearch, setProductSearch] = useState("")
   const [loading, setLoading] = useState(false)
@@ -61,6 +75,13 @@ export function LavaAutoForm({
     setDirection(s > step ? 1 : -1)
     setStep(s)
   }
+
+  function handleWashTypeChange(type: WashType) {
+    setWashType(type)
+    setAmount(priceForType(washPrices, type))
+  }
+
+  const productCost = items.reduce((sum, i) => sum + i.quantity * i.buyPrice, 0)
 
   const filteredProducts = products.filter(
     (p) =>
@@ -77,7 +98,7 @@ export function LavaAutoForm({
           i.productId === p.id ? { ...i, quantity: i.quantity + 1 } : i
         )
       }
-      return [...prev, { productId: p.id, name: p.name, quantity: 1 }]
+      return [...prev, { productId: p.id, name: p.name, quantity: 1, buyPrice: Number(p.buyPrice) }]
     })
     setProductSearch("")
   }
@@ -101,9 +122,9 @@ export function LavaAutoForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plate: plate.trim() || null,
+          washType,
           amount,
           notes: notes.trim() || null,
-          turnoId: activeTurnoId,
           products: items.map(({ productId, quantity }) => ({ productId, quantity })),
         }),
       })
@@ -194,7 +215,7 @@ export function LavaAutoForm({
           transition={{ duration: 0.18, ease: "easeInOut" }}
           className="flex-1 min-h-0"
         >
-          {/* ── STEP 1: Vehículo ── */}
+          {/* ── STEP 1: Vehículo + tipo ── */}
           {step === 1 && (
             <div className="rounded-2xl border bg-card overflow-hidden h-full flex flex-col">
               <div className="h-1 bg-linear-to-r from-blue-400 to-blue-500 shrink-0" />
@@ -226,7 +247,28 @@ export function LavaAutoForm({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 py-4 text-center text-muted-foreground">
+                <div className="space-y-2">
+                  <Label>Tipo de lavado</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {WASH_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => handleWashTypeChange(opt.value)}
+                        className={cn(
+                          "rounded-xl border px-3 py-2.5 text-sm font-medium text-center transition-all",
+                          washType === opt.value
+                            ? "border-blue-400 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            : "border-border bg-background text-muted-foreground hover:border-blue-200"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 py-2 text-center text-muted-foreground">
                   <div className="flex-1 h-px bg-border" />
                   <CarFront className="h-8 w-8 opacity-20" />
                   <div className="flex-1 h-px bg-border" />
@@ -366,13 +408,13 @@ export function LavaAutoForm({
               </div>
               <div className="flex flex-col flex-1 min-h-0 p-5 gap-4">
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
-                  {/* Vehicle summary */}
+                  {/* Vehicle + type summary */}
                   <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/40 border">
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 shrink-0">
                       <Car className="h-4 w-4 text-blue-500" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Vehículo</p>
+                      <p className="text-xs text-muted-foreground">Vehículo · {WASH_OPTIONS.find(o => o.value === washType)?.label}</p>
                       <p className="text-sm font-semibold font-mono">
                         {plate || "Anónimo"}
                       </p>
@@ -406,6 +448,19 @@ export function LavaAutoForm({
                   )}
 
                   <Separator />
+
+                  {/* Product cost — informational */}
+                  {productCost > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-dashed">
+                      <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground">
+                        Costo de productos (interno):
+                      </span>
+                      <span className="text-xs font-semibold tabular-nums ml-auto">
+                        ${productCost.toLocaleString("es-AR")}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Amount */}
                   <div className="space-y-1.5">

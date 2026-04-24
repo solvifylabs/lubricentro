@@ -300,7 +300,6 @@ async function main() {
     // Servicio 1
     const svc1 = await tx.servicio.create({
       data: {
-        clientId: cliente1.id,
         vehicleId: auto1.id,
         mileage: 85000,
         nextServiceKm: 90000,
@@ -328,7 +327,6 @@ async function main() {
     // Servicio 2
     const svc2 = await tx.servicio.create({
       data: {
-        clientId: cliente2.id,
         vehicleId: auto3.id,
         mileage: 62000,
         nextServiceKm: 67000,
@@ -352,7 +350,6 @@ async function main() {
     // Servicio 3
     const svc3 = await tx.servicio.create({
       data: {
-        clientId: cliente3.id,
         vehicleId: auto4.id,
         mileage: 110500,
         nextServiceKm: 115500,
@@ -374,7 +371,6 @@ async function main() {
     // Servicio 4 (reciente)
     const svc4 = await tx.servicio.create({
       data: {
-        clientId: cliente4.id,
         vehicleId: auto5.id,
         mileage: 45200,
         nextServiceKm: 50200,
@@ -396,7 +392,6 @@ async function main() {
     // Servicio hoy
     const svc5 = await tx.servicio.create({
       data: {
-        clientId: cliente1.id,
         vehicleId: auto2.id,
         mileage: 73000,
         nextServiceKm: 78000,

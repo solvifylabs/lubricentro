@@ -13,6 +13,7 @@ import type {
   ProveedorProducto,
   Compra,
   ConfigLavaAuto,
+  ConfigServicio,
   TurnoLavaAuto,
   SesionLavaAuto,
   SesionProducto,
@@ -33,9 +34,16 @@ export type {
   ProveedorProducto,
   Compra,
   ConfigLavaAuto,
+  ConfigServicio,
   TurnoLavaAuto,
   SesionLavaAuto,
   SesionProducto,
+}
+
+export type WashPrices = {
+  priceInterior: number
+  priceExterior: number
+  priceIntegro: number
 }
 
 export type ProductoWithRelations = Producto & {
@@ -45,18 +53,16 @@ export type ProductoWithRelations = Producto & {
 
 export type ClienteWithRelations = Cliente & {
   vehicles: Vehiculo[]
-  services: Servicio[]
   sales: Venta[]
 }
 
 export type VehiculoWithRelations = Vehiculo & {
-  client: Cliente | null
+  client: Cliente
   services: Servicio[]
 }
 
 export type ServicioWithRelations = Servicio & {
-  client: Cliente | null
-  vehicle: Vehiculo
+  vehicle: (Vehiculo & { client: Cliente }) | null
   products: (ServicioProducto & { product: Producto })[]
 }
 
@@ -79,6 +85,7 @@ export type SesionItem = {
   productId: string
   name: string
   quantity: number
+  buyPrice: number
 }
 
 export type CartItem = {

@@ -17,9 +17,9 @@ const schema = z.object({
   plate: z.string().min(1, "Dominio requerido"),
   brand: z.string().min(1, "Marca requerida"),
   model: z.string().min(1, "Modelo requerido"),
-  year: z.coerce.number().int().min(1900).max(2100).optional().or(z.literal("")),
-  engine: z.string().optional(),
-  clientId: z.string().optional(),
+  year: z.coerce.number().int().min(1900, "Año requerido").max(2100),
+  engine: z.string().min(1, "Motor requerido"),
+  clientId: z.string().min(1, "Cliente requerido"),
 })
 
 type FormData = z.infer<typeof schema>
@@ -42,7 +42,7 @@ export function VehiculoForm({ vehicle, clients = [], defaultClientId }: Vehicul
       plate: vehicle?.plate ?? "",
       brand: vehicle?.brand ?? "",
       model: vehicle?.model ?? "",
-      year: vehicle?.year ?? "",
+      year: vehicle?.year ?? undefined,
       engine: vehicle?.engine ?? "",
       clientId: vehicle?.clientId ?? defaultClientId ?? "",
     },
@@ -81,8 +81,9 @@ export function VehiculoForm({ vehicle, clients = [], defaultClientId }: Vehicul
               {errors.plate && <p className="text-xs text-destructive">{errors.plate.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label>Año</Label>
+              <Label>Año *</Label>
               <Input type="number" {...register("year")} placeholder="2020" />
+              {errors.year && <p className="text-xs text-destructive">{errors.year.message}</p>}
             </div>
             <div className="space-y-1">
               <Label>Marca *</Label>
@@ -95,25 +96,25 @@ export function VehiculoForm({ vehicle, clients = [], defaultClientId }: Vehicul
               {errors.model && <p className="text-xs text-destructive">{errors.model.message}</p>}
             </div>
             <div className="space-y-1">
-              <Label>Motor</Label>
+              <Label>Motor *</Label>
               <Input {...register("engine")} placeholder="1.8 nafta" />
+              {errors.engine && <p className="text-xs text-destructive">{errors.engine.message}</p>}
             </div>
-            {clients.length > 0 && (
-              <div className="space-y-1">
-                <Label>Cliente</Label>
-                <select
-                  {...register("clientId")}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                >
-                  <option value="">Sin asignar</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.firstName} {c.lastName ?? ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className="space-y-1">
+              <Label>Cliente *</Label>
+              <select
+                {...register("clientId")}
+                className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+              >
+                <option value="">Seleccionar cliente</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.firstName} {c.lastName ?? ""}
+                  </option>
+                ))}
+              </select>
+              {errors.clientId && <p className="text-xs text-destructive">{errors.clientId.message}</p>}
+            </div>
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>

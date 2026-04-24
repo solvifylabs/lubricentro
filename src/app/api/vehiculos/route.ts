@@ -32,14 +32,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
+  if (!body.year || !body.engine || !body.clientId) {
+    return NextResponse.json(
+      { error: "Año, motor y cliente son requeridos" },
+      { status: 400 }
+    )
+  }
+
   const vehicle = await prisma.vehiculo.create({
     data: {
       plate: body.plate.toUpperCase(),
       brand: body.brand,
       model: body.model,
-      year: body.year ? Number(body.year) : null,
-      engine: body.engine || null,
-      clientId: body.clientId || null,
+      year: Number(body.year),
+      engine: body.engine,
+      clientId: body.clientId,
     },
     include: { client: true },
   })

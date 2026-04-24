@@ -8,7 +8,7 @@ export async function GET() {
 
   if (!config) {
     const created = await prisma.configLavaAuto.create({
-      data: { washPrice: 0 },
+      data: { priceInterior: 0, priceExterior: 0, priceIntegro: 0 },
     })
     return NextResponse.json(created)
   }
@@ -22,14 +22,22 @@ export async function PUT(request: NextRequest) {
 
   if (!existing) {
     const created = await prisma.configLavaAuto.create({
-      data: { washPrice: body.washPrice },
+      data: {
+        priceInterior: body.priceInterior ?? 0,
+        priceExterior: body.priceExterior ?? 0,
+        priceIntegro: body.priceIntegro ?? 0,
+      },
     })
     return NextResponse.json(created)
   }
 
   const updated = await prisma.configLavaAuto.update({
     where: { id: existing.id },
-    data: { washPrice: body.washPrice },
+    data: {
+      priceInterior: body.priceInterior ?? existing.priceInterior,
+      priceExterior: body.priceExterior ?? existing.priceExterior,
+      priceIntegro: body.priceIntegro ?? existing.priceIntegro,
+    },
   })
 
   return NextResponse.json(updated)

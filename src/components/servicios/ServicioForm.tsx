@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -12,12 +12,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Loader2, Plus, Trash2 } from "lucide-react"
-import type { Cliente, Vehiculo, Producto } from "@/types"
+import { Loader2, Trash2 } from "lucide-react"
+import type { Vehiculo, Producto } from "@/types"
 
 const schema = z.object({
-  vehicleId: z.string().min(1, "Vehículo requerido"),
-  clientId: z.string().optional(),
+  vehicleId: z.string().optional(),
   mileage: z.coerce.number().int().min(0).optional().or(z.literal("")),
   nextServiceKm: z.coerce.number().int().min(0).optional().or(z.literal("")),
   serviceDate: z.string().min(1),
@@ -36,19 +35,17 @@ interface ProductItem {
 }
 
 interface ServicioFormProps {
-  vehicles: Vehiculo[]
-  clients: Pick<Cliente, "id" | "firstName" | "lastName">[]
+  vehicles: (Vehiculo & { client: { id: string; firstName: string; lastName: string | null } })[]
   products: Producto[]
   defaultVehicleId?: string
-  defaultClientId?: string
+  defaultServicePrice?: number
 }
 
 export function ServicioForm({
   vehicles,
-  clients,
   products,
   defaultVehicleId,
-  defaultClientId,
+  defaultServicePrice = 0,
 }: ServicioFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -57,16 +54,33 @@ export function ServicioForm({
 
   const today = new Date().toISOString().split("T")[0]
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(schema) as any,
     defaultValues: {
       vehicleId: defaultVehicleId ?? "",
-      clientId: defaultClientId ?? "",
       serviceDate: today,
-      amount: 0,
+      amount: defaultServicePrice,
     },
   })
+
+  const mileage = watch("mileage")
+  const serviceDate = watch("serviceDate")
+
+  useEffect(() => {
+    const km = Number(mileage)
+    if (km > 0) {
+      setValue("nextServiceKm", km + 10000)
+    }
+  }, [mileage, setValue])
+
+  useEffect(() => {
+    if (serviceDate) {
+      const d = new Date(serviceDate)
+      d.setFullYear(d.getFullYear() + 1)
+      setValue("nextServiceDate", d.toISOString().split("T")[0])
+    }
+  }, [serviceDate, setValue])
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -114,38 +128,23 @@ export function ServicioForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Vehicle & client */}
+      {/* Vehicle */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Vehículo y cliente</CardTitle>
+          <CardTitle className="text-base">Vehículo</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label>Vehículo *</Label>
+          <div className="col-span-2 space-y-1">
+            <Label>Vehículo</Label>
             <select
               {...register("vehicleId")}
               className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
             >
-              <option value="">Seleccionar vehículo</option>
+              <option value="">Sin vehículo (servicio anónimo)</option>
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.plate} — {v.brand} {v.model}
-                </option>
-              ))}
-            </select>
-            {errors.vehicleId && <p className="text-xs text-destructive">{errors.vehicleId.message}</p>}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Cliente</Label>
-            <select
-              {...register("clientId")}
-              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-            >
-              <option value="">Sin cliente</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.firstName} {c.lastName ?? ""}
+                  {v.client ? ` (${v.client.firstName} ${v.client.lastName ?? ""})` : ""}
                 </option>
               ))}
             </select>
@@ -158,7 +157,7 @@ export function ServicioForm({
 
           <div className="space-y-1">
             <Label>Km próximo service</Label>
-            <Input type="number" {...register("nextServiceKm")} placeholder="Ej: 90000" />
+            <Input type="number" {...register("nextServiceKm")} placeholder="Auto-calculado" />
           </div>
 
           <div className="space-y-1">
@@ -169,6 +168,7 @@ export function ServicioForm({
           <div className="space-y-1">
             <Label>Fecha próximo service</Label>
             <Input type="date" {...register("nextServiceDate")} />
+            <p className="text-xs text-muted-foreground">Auto-calculado (serviceDate + 1 año), editable</p>
           </div>
 
           <div className="col-span-2 space-y-1">
@@ -253,6 +253,7 @@ export function ServicioForm({
             />
             {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
           </div>
+          <p className="text-xs text-muted-foreground mt-1.5">Pre-completado desde precio global de service. Editable.</p>
         </CardContent>
       </Card>
 

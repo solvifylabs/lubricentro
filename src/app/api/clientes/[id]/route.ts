@@ -9,11 +9,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const client = await prisma.cliente.findUnique({
     where: { id },
     include: {
-      vehicles: { include: { services: { orderBy: { serviceDate: "desc" }, take: 5 } } },
-      services: {
-        include: { vehicle: true },
-        orderBy: { serviceDate: "desc" },
-        take: 10,
+      vehicles: {
+        include: {
+          services: { orderBy: { serviceDate: "desc" }, take: 5 },
+        },
       },
       sales: {
         include: { items: { include: { product: true } } },

@@ -65,7 +65,11 @@ export default async function LavaAutoPage({
     ])
 
   const todayTotal = Number(todayAggregate._sum.amount ?? 0)
-  const washPrice = config ? Number(config.washPrice) : 0
+  const washPrices = {
+    priceInterior: config ? Number(config.priceInterior) : 0,
+    priceExterior: config ? Number(config.priceExterior) : 0,
+    priceIntegro: config ? Number(config.priceIntegro) : 0,
+  }
 
   // Fetch product details for daily consumption
   const productIds = dailyProducts.map((dp) => dp.productId)
@@ -88,7 +92,7 @@ export default async function LavaAutoPage({
         description={`${totalCount} lavado${totalCount !== 1 ? "s" : ""} registrados`}
         action={
           <div className="flex items-center gap-2">
-            <WashPriceConfig currentPrice={washPrice} />
+            <WashPriceConfig prices={washPrices} />
             <Button asChild>
               <Link href="/lava-auto/nuevo">
                 <Plus className="h-4 w-4 mr-1" /> Nuevo lavado

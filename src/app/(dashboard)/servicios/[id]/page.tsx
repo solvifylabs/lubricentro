@@ -20,18 +20,19 @@ export default async function ServicioDetailPage({
   const service = await prisma.servicio.findUnique({
     where: { id },
     include: {
-      vehicle: true,
-      client: true,
+      vehicle: { include: { client: true } },
       products: { include: { product: { include: { brand: true } } } },
     },
   })
 
   if (!service) notFound()
 
+  const client = service.vehicle?.client ?? null
+
   return (
     <div className="container mx-auto">
       <DetailHeader
-        title={`Servicio — ${service.vehicle.plate}`}
+        title={`Servicio — ${service.vehicle?.plate ?? "Anónimo"}`}
         description={new Date(service.serviceDate).toLocaleDateString("es-AR", {
           weekday: "long",
           year: "numeric",
@@ -43,11 +44,11 @@ export default async function ServicioDetailPage({
         icon={Wrench}
         gradient="from-yellow-400 to-yellow-500"
         actions={
-          service.client?.phone ? (
+          client?.phone ? (
             <WhatsAppButton
-              phone={service.client.phone}
+              phone={client.phone}
               label="Avisar próximo service"
-              message={`Hola ${service.client.firstName}! Tu ${service.vehicle.brand} ${service.vehicle.model} (${service.vehicle.plate}) tiene el próximo service el ${service.nextServiceDate ? new Date(service.nextServiceDate).toLocaleDateString("es-AR") : "próximamente"}${service.nextServiceKm ? ` a los ${service.nextServiceKm.toLocaleString("es-AR")} km` : ""}. ¡Estamos a tu disposición!`}
+              message={`Hola ${client.firstName}! Tu ${service.vehicle?.brand} ${service.vehicle?.model} (${service.vehicle?.plate}) tiene el próximo service el ${service.nextServiceDate ? new Date(service.nextServiceDate).toLocaleDateString("es-AR") : "próximamente"}${service.nextServiceKm ? ` a los ${service.nextServiceKm.toLocaleString("es-AR")} km` : ""}. ¡Estamos a tu disposición!`}
             />
           ) : undefined
         }
@@ -62,11 +63,17 @@ export default async function ServicioDetailPage({
             </div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Vehículo</p>
           </div>
-          <Link href={`/vehiculos/${service.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline inline-block mb-1">
-            {service.vehicle.plate}
-          </Link>
-          <p className="text-sm">{service.vehicle.brand} {service.vehicle.model} {service.vehicle.year ? `(${service.vehicle.year})` : ""}</p>
-          {service.vehicle.engine && <p className="text-xs text-muted-foreground">{service.vehicle.engine}</p>}
+          {service.vehicle ? (
+            <>
+              <Link href={`/vehiculos/${service.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline inline-block mb-1">
+                {service.vehicle.plate}
+              </Link>
+              <p className="text-sm">{service.vehicle.brand} {service.vehicle.model} {service.vehicle.year ? `(${service.vehicle.year})` : ""}</p>
+              {service.vehicle.engine && <p className="text-xs text-muted-foreground">{service.vehicle.engine}</p>}
+            </>
+          ) : (
+            <p className="text-muted-foreground">Sin vehículo</p>
+          )}
         </div>
 
         <div className="rounded-xl border bg-card px-4 py-4">
@@ -76,13 +83,13 @@ export default async function ServicioDetailPage({
             </div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Cliente</p>
           </div>
-          {service.client ? (
+          {client ? (
             <>
-              <Link href={`/clientes/${service.client.id}`} className="font-bold text-base hover:underline">
-                {service.client.firstName} {service.client.lastName ?? ""}
+              <Link href={`/clientes/${client.id}`} className="font-bold text-base hover:underline">
+                {client.firstName} {client.lastName ?? ""}
               </Link>
-              {service.client.phone && (
-                <p className="text-sm text-muted-foreground mt-0.5">{service.client.phone}</p>
+              {client.phone && (
+                <p className="text-sm text-muted-foreground mt-0.5">{client.phone}</p>
               )}
             </>
           ) : (

@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { PaginationNav } from "@/components/ui/pagination-nav"
-import { Plus, Car, UserX, Wrench } from "lucide-react"
+import { Plus, Car, Wrench } from "lucide-react"
 import type { Vehiculo, Cliente } from "@/types"
 
 const PAGE_SIZE = 10
@@ -34,7 +34,7 @@ export default async function VehiculosPage({
     ...(clientId && { clientId }),
   }
 
-  const [vehicles, total, noClientCount] = await Promise.all([
+  const [vehicles, total] = await Promise.all([
     prisma.vehiculo.findMany({
       where,
       include: {
@@ -46,7 +46,6 @@ export default async function VehiculosPage({
       take: PAGE_SIZE,
     }),
     prisma.vehiculo.count({ where }),
-    prisma.vehiculo.count({ where: { clientId: null } }),
   ])
 
   const paginationParams: Record<string, string> = {}
@@ -69,7 +68,7 @@ export default async function VehiculosPage({
       />
 
       {/* Stats strip */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 gap-3 mb-4">
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 dark:bg-yellow-400/10 shrink-0">
             <Car className="h-4 w-4 text-yellow-500" />
@@ -77,15 +76,6 @@ export default async function VehiculosPage({
           <div>
             <p className="text-xs text-muted-foreground">Total vehículos</p>
             <p className="text-lg font-bold tabular-nums">{total}</p>
-          </div>
-        </div>
-        <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-500/10 shrink-0">
-            <UserX className="h-4 w-4 text-rose-500" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Sin cliente</p>
-            <p className="text-lg font-bold tabular-nums text-rose-600">{noClientCount}</p>
           </div>
         </div>
       </div>
@@ -124,7 +114,7 @@ export default async function VehiculosPage({
                 </TableCell>
               </TableRow>
             )}
-            {vehicles.map((v: Vehiculo & { client: Pick<Cliente, "id" | "firstName" | "lastName"> | null; _count: { services: number } }) => (
+            {vehicles.map((v: Vehiculo & { client: Pick<Cliente, "id" | "firstName" | "lastName">; _count: { services: number } }) => (
               <TableRow key={v.id}>
                 <TableCell>
                   <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm">

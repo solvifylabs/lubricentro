@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+import { resolveOrCreateTurno } from "@/lib/turno"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -38,7 +39,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  // body: { clientId?, items: [{productId, quantity, price}], discount? }
 
   const total =
     body.items.reduce(
@@ -49,12 +49,15 @@ export async function POST(request: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sale = await prisma.$transaction(async (tx: any) => {
+    const turnoId = await resolveOrCreateTurno(tx)
+
     const v = await tx.venta.create({
       data: {
         clientId: body.clientId || null,
         total,
         discount: body.discount ?? 0,
         status: "completed",
+        turnoId,
         items: {
           create: body.items.map((item: { productId: string; quantity: number; price: number }) => ({
             productId: item.productId,
@@ -65,7 +68,6 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update stock
     for (const item of body.items) {
       await tx.producto.update({
         where: { id: item.productId },

@@ -25,15 +25,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params
   const body = await request.json()
 
+  if (!body.year || !body.engine || !body.clientId) {
+    return NextResponse.json(
+      { error: "Año, motor y cliente son requeridos" },
+      { status: 400 }
+    )
+  }
+
   const vehicle = await prisma.vehiculo.update({
     where: { id },
     data: {
       plate: body.plate.toUpperCase(),
       brand: body.brand,
       model: body.model,
-      year: body.year ? Number(body.year) : null,
-      engine: body.engine || null,
-      clientId: body.clientId || null,
+      year: Number(body.year),
+      engine: body.engine,
+      clientId: body.clientId,
     },
   })
 

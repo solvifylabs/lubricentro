@@ -2,43 +2,28 @@ export const dynamic = 'force-dynamic'
 
 import prisma from "@/lib/prisma"
 import { LavaAutoForm } from "@/components/lava-auto/LavaAutoForm"
-
-function todayStart() {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function todayEnd() {
-  const d = new Date()
-  d.setHours(23, 59, 59, 999)
-  return d
-}
+import type { WashPrices } from "@/types"
 
 export default async function NuevoLavaAutoPage() {
-  const [products, config, activeTurno] = await Promise.all([
+  const [products, config] = await Promise.all([
     prisma.producto.findMany({
       where: { active: true, stock: { gt: 0 } },
       orderBy: { name: "asc" },
     }),
     prisma.configLavaAuto.findFirst(),
-    prisma.turnoLavaAuto.findFirst({
-      where: {
-        endedAt: null,
-        startedAt: { gte: todayStart(), lte: todayEnd() },
-      },
-    }),
   ])
 
-  const washPrice = config ? Number(config.washPrice) : 0
+  const washPrices: WashPrices = config
+    ? {
+        priceInterior: Number(config.priceInterior),
+        priceExterior: Number(config.priceExterior),
+        priceIntegro: Number(config.priceIntegro),
+      }
+    : { priceInterior: 0, priceExterior: 0, priceIntegro: 0 }
 
   return (
     <div className="container flex-1 flex flex-col min-h-0 py-6">
-      <LavaAutoForm
-        products={products}
-        defaultWashPrice={washPrice}
-        activeTurnoId={activeTurno?.id ?? null}
-      />
+      <LavaAutoForm products={products} washPrices={washPrices} />
     </div>
   )
 }

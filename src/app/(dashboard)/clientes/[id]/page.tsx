@@ -23,11 +23,6 @@ export default async function ClienteDetailPage({
     where: { id },
     include: {
       vehicles: true,
-      services: {
-        include: { vehicle: true },
-        orderBy: { serviceDate: "desc" },
-        take: 10,
-      },
       sales: {
         orderBy: { createdAt: "desc" },
         take: 10,
@@ -37,7 +32,14 @@ export default async function ClienteDetailPage({
 
   if (!client) notFound()
 
-  const totalServiceAmount = client.services.reduce((acc, s) => acc + Number(s.amount), 0)
+  const clientServices = await prisma.servicio.findMany({
+    where: { vehicle: { clientId: id } },
+    include: { vehicle: true },
+    orderBy: { serviceDate: "desc" },
+    take: 10,
+  })
+
+  const totalServiceAmount = clientServices.reduce((acc, s) => acc + Number(s.amount), 0)
   const totalSaleAmount = client.sales
     .filter(s => s.status === "completed")
     .reduce((acc, s) => acc + Number(s.total), 0)
@@ -80,7 +82,7 @@ export default async function ClienteDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Servicios</p>
-            <p className="text-lg font-bold tabular-nums">{client.services.length}</p>
+            <p className="text-lg font-bold tabular-nums">{clientServices.length}</p>
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
@@ -131,7 +133,7 @@ export default async function ClienteDetailPage({
       <Tabs defaultValue="vehiculos">
         <TabsList>
           <TabsTrigger value="vehiculos">Vehículos ({client.vehicles.length})</TabsTrigger>
-          <TabsTrigger value="servicios">Servicios ({client.services.length})</TabsTrigger>
+          <TabsTrigger value="servicios">Servicios ({clientServices.length})</TabsTrigger>
           <TabsTrigger value="ventas">Compras ({client.sales.length})</TabsTrigger>
           <TabsTrigger value="editar">Editar</TabsTrigger>
         </TabsList>
@@ -169,19 +171,19 @@ export default async function ClienteDetailPage({
         </TabsContent>
 
         <TabsContent value="servicios" className="mt-4 space-y-2">
-          {client.services.length === 0 ? (
+          {clientServices.length === 0 ? (
             <div className="rounded-xl border bg-card px-5 py-10 text-center text-muted-foreground text-sm">
               Sin servicios registrados.
             </div>
           ) : (
-            client.services.map((s: Servicio & { vehicle: Vehiculo }) => (
+            clientServices.map((s: Servicio & { vehicle: Vehiculo | null }) => (
               <div key={s.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-xs">
-                      {s.vehicle.plate}
+                      {s.vehicle?.plate ?? "—"}
                     </span>
-                    <span className="text-sm text-muted-foreground">{s.vehicle.brand} {s.vehicle.model}</span>
+                    <span className="text-sm text-muted-foreground">{s.vehicle?.brand} {s.vehicle?.model}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(s.serviceDate).toLocaleDateString("es-AR")}

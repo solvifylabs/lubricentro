@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+import { resolveOrCreateTurno } from "@/lib/turno"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -13,8 +14,8 @@ export async function GET(request: NextRequest) {
       ...(search && {
         OR: [
           { vehicle: { plate: { contains: search, mode: "insensitive" } } },
-          { client: { firstName: { contains: search, mode: "insensitive" } } },
-          { client: { lastName: { contains: search, mode: "insensitive" } } },
+          { vehicle: { client: { firstName: { contains: search, mode: "insensitive" } } } },
+          { vehicle: { client: { lastName: { contains: search, mode: "insensitive" } } } },
         ],
       }),
       ...(date && {
@@ -25,8 +26,11 @@ export async function GET(request: NextRequest) {
       }),
     },
     include: {
-      vehicle: true,
-      client: { select: { id: true, firstName: true, lastName: true, phone: true } },
+      vehicle: {
+        include: {
+          client: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        },
+      },
     },
     orderBy: { serviceDate: "desc" },
     take: 50,
@@ -40,20 +44,21 @@ export async function POST(request: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const service = await prisma.$transaction(async (tx: any) => {
+    const turnoId = await resolveOrCreateTurno(tx)
+
     const svc = await tx.servicio.create({
       data: {
-        clientId: body.clientId || null,
-        vehicleId: body.vehicleId,
+        vehicleId: body.vehicleId || null,
         mileage: body.mileage ? Number(body.mileage) : null,
         nextServiceKm: body.nextServiceKm ? Number(body.nextServiceKm) : null,
         serviceDate: body.serviceDate ? new Date(body.serviceDate) : new Date(),
         nextServiceDate: body.nextServiceDate ? new Date(body.nextServiceDate) : null,
         amount: body.amount,
         notes: body.notes || null,
+        turnoId,
       },
     })
 
-    // Link products and reduce stock
     if (body.products && body.products.length > 0) {
       for (const item of body.products) {
         await tx.servicioProducto.create({

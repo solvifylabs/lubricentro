@@ -9,8 +9,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const service = await prisma.servicio.findUnique({
     where: { id },
     include: {
-      vehicle: true,
-      client: true,
+      vehicle: { include: { client: true } },
       products: { include: { product: { include: { brand: true } } } },
     },
   })

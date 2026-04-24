@@ -21,27 +21,27 @@ model Marca {
 }
 
 model Producto {
-  id             String              @id @default(cuid())
-  name           String
-  code           String?             @unique
-  categoryId     String
-  category       Categoria           @relation(fields: [categoryId], references: [id])
-  brandId        String?
-  brand          Marca?              @relation(fields: [brandId], references: [id])
-  buyPrice       Decimal             @db.Decimal(10, 2)
-  sellPrice      Decimal             @db.Decimal(10, 2)
-  stock          Int                 @default(0)
-  minStock       Int                 @default(5)
-  unit           String              @default("unidad")
-  active         Boolean             @default(true)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id                         String              @id @default(cuid())
+  name                       String
+  code                       String?             @unique
+  categoryId                 String
+  category                   Categoria           @relation(fields: [categoryId], references: [id])
+  brandId                    String?
+  brand                      Marca?              @relation(fields: [brandId], references: [id])
+  buyPrice                   Decimal             @db.Decimal(10, 2)
+  sellPrice                  Decimal             @db.Decimal(10, 2)
+  stock                      Int                 @default(0)
+  minStock                   Int                 @default(5)
+  unit                       String              @default("unidad")
+  active                     Boolean             @default(true)
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  expectedConsumptionPerWash Decimal?            @db.Decimal(10, 4)
   stockMovements             MovimientoStock[]
   saleItems                  DetalleVenta[]
   serviceItems               ServicioProducto[]
   supplierLinks              ProveedorProducto[]
   sesionProducts             SesionProducto[]
-  expectedConsumptionPerWash Decimal?              @db.Decimal(10, 4)
 }
 
 model MovimientoStock {
@@ -65,7 +65,6 @@ model Cliente {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   vehicles  Vehiculo[]
-  services  Servicio[]
   sales     Venta[]
 }
 
@@ -74,10 +73,10 @@ model Vehiculo {
   plate     String     @unique
   brand     String
   model     String
-  year      Int?
-  engine    String?
-  clientId  String?
-  client    Cliente?   @relation(fields: [clientId], references: [id])
+  year      Int
+  engine    String
+  clientId  String
+  client    Cliente    @relation(fields: [clientId], references: [id])
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   services  Servicio[]
@@ -85,16 +84,16 @@ model Vehiculo {
 
 model Servicio {
   id              String             @id @default(cuid())
-  clientId        String?
-  client          Cliente?           @relation(fields: [clientId], references: [id])
-  vehicleId       String
-  vehicle         Vehiculo           @relation(fields: [vehicleId], references: [id])
+  vehicleId       String?
+  vehicle         Vehiculo?          @relation(fields: [vehicleId], references: [id])
   mileage         Int?
   nextServiceKm   Int?
   serviceDate     DateTime           @default(now())
   nextServiceDate DateTime?
   amount          Decimal            @db.Decimal(10, 2)
   notes           String?
+  turnoId         String?
+  turno           TurnoLavaAuto?     @relation(fields: [turnoId], references: [id])
   createdAt       DateTime           @default(now())
   products        ServicioProducto[]
 }
@@ -116,6 +115,8 @@ model Venta {
   total     Decimal        @db.Decimal(10, 2)
   discount  Decimal        @default(0) @db.Decimal(10, 2)
   status    String         @default("completed") // "completed" | "cancelled"
+  turnoId   String?
+  turno     TurnoLavaAuto? @relation(fields: [turnoId], references: [id])
   createdAt DateTime       @default(now())
   items     DetalleVenta[]
 }
@@ -164,24 +165,35 @@ model Compra {
 }
 
 model ConfigLavaAuto {
-  id        String   @id @default(cuid())
-  washPrice Decimal  @db.Decimal(10, 2)
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  priceInterior Decimal  @default(0) @db.Decimal(10, 2)
+  priceExterior Decimal  @default(0) @db.Decimal(10, 2)
+  priceIntegro  Decimal  @default(0) @db.Decimal(10, 2)
+  updatedAt     DateTime @updatedAt
+}
+
+model ConfigServicio {
+  id           String   @id @default(cuid())
+  servicePrice Decimal  @default(0) @db.Decimal(10, 2)
+  updatedAt    DateTime @updatedAt
 }
 
 model TurnoLavaAuto {
   id        String           @id @default(cuid())
-  date      DateTime         @db.Date
+  date      DateTime         @unique @db.Date
   startedAt DateTime         @default(now())
   endedAt   DateTime?
   notes     String?
-  sessions  SesionLavaAuto[]
   createdAt DateTime         @default(now())
+  sessions  SesionLavaAuto[]
+  services  Servicio[]
+  sales     Venta[]
 }
 
 model SesionLavaAuto {
   id          String           @id @default(cuid())
   plate       String?
+  washType    String           @default("integro") // "interior" | "exterior" | "integro"
   amount      Decimal          @db.Decimal(10, 2)
   notes       String?
   sessionDate DateTime         @default(now())

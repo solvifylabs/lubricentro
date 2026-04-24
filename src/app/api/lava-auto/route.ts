@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
+import { resolveOrCreateTurno } from "@/lib/turno"
 
 const PAGE_SIZE = 20
 
@@ -41,24 +42,23 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
 
   const session = await prisma.$transaction(async (tx) => {
+    const turnoId = await resolveOrCreateTurno(tx)
+
     const ses = await tx.sesionLavaAuto.create({
       data: {
         plate: body.plate || null,
+        washType: body.washType || "integro",
         amount: body.amount,
         notes: body.notes || null,
         sessionDate: body.sessionDate ? new Date(body.sessionDate) : new Date(),
-        turnoId: body.turnoId || null,
+        turnoId,
       },
     })
 
     if (body.products && body.products.length > 0) {
       for (const item of body.products as { productId: string; quantity: number }[]) {
         await tx.sesionProducto.create({
-          data: {
-            sessionId: ses.id,
-            productId: item.productId,
-            quantity: item.quantity,
-          },
+          data: { sessionId: ses.id, productId: item.productId, quantity: item.quantity },
         })
         await tx.producto.update({
           where: { id: item.productId },

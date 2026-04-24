@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     },
     include: {
       vehicles: { select: { id: true, plate: true, brand: true, model: true } },
-      _count: { select: { services: true, sales: true } },
+      _count: { select: { vehicles: true, sales: true } },
     },
     orderBy: { firstName: "asc" },
   })
