@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { PageHeader } from "@/components/layout/PageHeader"
 import { StatsCards } from "@/components/dashboard/StatsCards"
+import { TurnoWidget } from "@/components/lava-auto/TurnoWidget"
 import prisma from "@/lib/prisma"
 import { AlertTriangle, Wrench, ShoppingCart, Plus, Receipt } from "lucide-react"
 import Link from "next/link"
@@ -125,6 +126,10 @@ export default async function DashboardPage() {
       />
 
       <StatsCards cards={summaryCards} />
+
+      <div className="mb-6">
+        <TurnoWidget />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Low stock alert */}

@@ -1,6 +1,6 @@
 # Skill Registry — lubricentro-app
 
-Generated: 2026-03-31
+Generated: 2026-04-23
 
 ## User Skills
 
@@ -13,12 +13,21 @@ Generated: 2026-03-31
 
 > Skipped: go-testing (Go-only, not relevant), sdd-* (orchestrator-phase only), _shared, skill-registry
 
+## Project Skills
+
+| Skill | Trigger |
+|-------|---------|
+| frontend-design | When building web components, pages, dashboards, React components, or styling/beautifying any web UI |
+
+> Project-level skills override user-level on name collision.
+
 ## Project Conventions
 
 | File | Purpose |
 |------|---------|
 | CLAUDE.md | Project-level Claude instructions (delegates to AGENTS.md) |
 | AGENTS.md | Agent instructions — warns Next.js 16.x has breaking changes, read `node_modules/next/dist/docs/` before writing code |
+| .atl/project-specs.md | Full project requirements v0.2 — modules, scenarios, business rules, out-of-scope items |
 
 ## Compact Rules
 
@@ -36,6 +45,12 @@ Generated: 2026-03-31
 - Launch two independent blind judge sub-agents simultaneously
 - Synthesize findings, apply fixes, re-judge until both pass or escalate after 2 iterations
 - Use before merging significant implementations
+
+### frontend-design
+- Choose a bold, intentional aesthetic direction before coding (not generic AI aesthetics)
+- Implement production-grade, functional code — visually striking and cohesive
+- Use distinctive typography (avoid generic fonts like Arial/Inter)
+- Stack: React + Tailwind v4 + shadcn/ui + framer-motion available
 
 ### Project: AGENTS.md Rule
 - **CRITICAL**: Next.js 16.2.1 has breaking changes. MUST read `node_modules/next/dist/docs/` before writing any Next.js code.

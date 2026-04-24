@@ -9,11 +9,11 @@ import {
   Car,
   Wrench,
   ShoppingCart,
-  Truck,
   BarChart3,
   LayoutDashboard,
   LogOut,
   Droplets,
+  Waves,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -25,8 +25,8 @@ const navItems = [
   { href: "/clientes", label: "Clientes", icon: Users },
   { href: "/vehiculos", label: "Vehículos", icon: Car },
   { href: "/servicios", label: "Servicios", icon: Wrench },
+  { href: "/lava-auto", label: "Lava Auto", icon: Waves },
   { href: "/ventas", label: "Ventas", icon: ShoppingCart },
-  { href: "/proveedores", label: "Proveedores", icon: Truck },
   { href: "/reportes", label: "Reportes", icon: BarChart3 },
 ]
 

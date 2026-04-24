@@ -36,10 +36,12 @@ model Producto {
   active         Boolean             @default(true)
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
-  stockMovements MovimientoStock[]
-  saleItems      DetalleVenta[]
-  serviceItems   ServicioProducto[]
-  supplierLinks  ProveedorProducto[]
+  stockMovements             MovimientoStock[]
+  saleItems                  DetalleVenta[]
+  serviceItems               ServicioProducto[]
+  supplierLinks              ProveedorProducto[]
+  sesionProducts             SesionProducto[]
+  expectedConsumptionPerWash Decimal?              @db.Decimal(10, 4)
 }
 
 model MovimientoStock {
@@ -159,4 +161,41 @@ model Compra {
   total      Decimal   @db.Decimal(10, 2)
   notes      String?
   createdAt  DateTime  @default(now())
+}
+
+model ConfigLavaAuto {
+  id        String   @id @default(cuid())
+  washPrice Decimal  @db.Decimal(10, 2)
+  updatedAt DateTime @updatedAt
+}
+
+model TurnoLavaAuto {
+  id        String           @id @default(cuid())
+  date      DateTime         @db.Date
+  startedAt DateTime         @default(now())
+  endedAt   DateTime?
+  notes     String?
+  sessions  SesionLavaAuto[]
+  createdAt DateTime         @default(now())
+}
+
+model SesionLavaAuto {
+  id          String           @id @default(cuid())
+  plate       String?
+  amount      Decimal          @db.Decimal(10, 2)
+  notes       String?
+  sessionDate DateTime         @default(now())
+  turnoId     String?
+  turno       TurnoLavaAuto?   @relation(fields: [turnoId], references: [id])
+  products    SesionProducto[]
+  createdAt   DateTime         @default(now())
+}
+
+model SesionProducto {
+  id        String         @id @default(cuid())
+  sessionId String
+  session   SesionLavaAuto @relation(fields: [sessionId], references: [id])
+  productId String
+  product   Producto       @relation(fields: [productId], references: [id])
+  quantity  Int
 }

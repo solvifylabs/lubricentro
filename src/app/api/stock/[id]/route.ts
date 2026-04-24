@@ -33,6 +33,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       sellPrice: body.sellPrice,
       minStock: body.minStock,
       unit: body.unit,
+      expectedConsumptionPerWash: body.expectedConsumptionPerWash ?? null,
     },
     include: { category: true, brand: true },
   })

@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       stock: body.stock ?? 0,
       minStock: body.minStock ?? 5,
       unit: body.unit ?? "unidad",
+      expectedConsumptionPerWash: body.expectedConsumptionPerWash ?? null,
     },
     include: { category: true, brand: true },
   })

@@ -12,6 +12,10 @@ import type {
   Proveedor,
   ProveedorProducto,
   Compra,
+  ConfigLavaAuto,
+  TurnoLavaAuto,
+  SesionLavaAuto,
+  SesionProducto,
 } from "@prisma/client"
 
 export type {
@@ -28,6 +32,10 @@ export type {
   Proveedor,
   ProveedorProducto,
   Compra,
+  ConfigLavaAuto,
+  TurnoLavaAuto,
+  SesionLavaAuto,
+  SesionProducto,
 }
 
 export type ProductoWithRelations = Producto & {
@@ -60,6 +68,17 @@ export type VentaWithRelations = Venta & {
 export type ProveedorWithRelations = Proveedor & {
   productLinks: (ProveedorProducto & { product: Producto })[]
   purchases: Compra[]
+}
+
+export type SesionLavaAutoWithRelations = SesionLavaAuto & {
+  turno: TurnoLavaAuto | null
+  products: (SesionProducto & { product: Producto })[]
+}
+
+export type SesionItem = {
+  productId: string
+  name: string
+  quantity: number
 }
 
 export type CartItem = {
