@@ -14,10 +14,12 @@ import {
   LogOut,
   Droplets,
   Waves,
+  ShieldCheck,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import type { Role } from "@/lib/auth/roles"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -30,7 +32,7 @@ const navItems = [
   { href: "/reportes", label: "Reportes", icon: BarChart3 },
 ]
 
-export function Sidebar() {
+export function Sidebar({ role }: { role: Role | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -89,6 +91,37 @@ export function Sidebar() {
             </motion.div>
           )
         })}
+
+        {role === "admin" && (
+          <>
+            <div className="my-2 border-t border-white/5" />
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: navItems.length * 0.04, duration: 0.25, ease: "easeOut" }}
+            >
+              <Link
+                href="/admin/usuarios"
+                className={cn(
+                  "relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  pathname.startsWith("/admin")
+                    ? "text-gray-950"
+                    : "text-gray-400 hover:text-gray-100 hover:bg-white/5"
+                )}
+              >
+                {pathname.startsWith("/admin") && (
+                  <motion.div
+                    layoutId="sidebar-active"
+                    className="absolute inset-0 rounded-lg bg-yellow-400 shadow-md shadow-yellow-400/20"
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <ShieldCheck className="relative h-4 w-4 shrink-0" />
+                <span className="relative">Usuarios</span>
+              </Link>
+            </motion.div>
+          </>
+        )}
       </nav>
 
       {/* Sign out */}
