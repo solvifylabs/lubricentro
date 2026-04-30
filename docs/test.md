@@ -62,7 +62,7 @@ Requires `next-test-api-route-handler` and a dedicated test PostgreSQL schema.
 5. `DELETE /api/stock/[id]` → soft delete (`active = false`), not hard delete
 6. `POST /api/stock` with `stock > 0` → MovimientoStock "entry" created
 
-**Status:** 🔜 Next phase
+**Status:** ✅ Implemented
 
 ---
 
@@ -167,15 +167,28 @@ Document WHY whenever `--no-verify` is used.
 
 ## Setup Steps (completed)
 
-1. ✅ Install `vitest`, `vite-tsconfig-paths`, `@vitest/coverage-v8`
-2. ✅ Create `vitest.config.ts`
-3. ✅ Add `test` + `test:watch` scripts to `package.json`
+1. ✅ Install `vitest`, `@vitest/coverage-v8`, `husky`
+2. ✅ Create `vitest.config.ts` (unit) + `vitest.integration.config.ts` (integration)
+3. ✅ Add `test`, `test:watch`, `test:coverage`, `test:integration`, `test:all` scripts
 4. ✅ Write Tier 1 tests (`roles.test.ts`, `turno.test.ts`)
-5. ✅ Install `husky`
-6. ✅ Configure pre-commit hook
+5. ✅ Configure Husky pre-commit hook (unit tests only, fast)
+6. ✅ Install `@testcontainers/postgresql` + `testcontainers`
+7. ✅ Create `src/tests/setup/container.ts` (Docker PostgreSQL globalSetup)
+8. ✅ Create `src/tests/setup/helpers.ts` (test factories + cleanDatabase)
+9. ✅ Write Tier 2 integration tests (`stock`, `ventas`, `servicios`, `lava-auto`)
+10. ✅ Fix `PATCH /api/ventas/[id]` cancellation bug — now restores stock atomically
+
+## Running Tests
+
+```bash
+pnpm test                # Unit tests only (fast, pre-commit gate)
+pnpm test:watch          # Unit tests in watch mode
+pnpm test:integration    # Integration tests (requires Docker)
+pnpm test:all            # Unit + integration
+pnpm test:coverage       # Unit tests with coverage report
+```
 
 ## Next Steps
 
-- [ ] Tier 2: install `next-test-api-route-handler`, set up `.env.test`, write integration tests
-- [ ] Fix `PATCH /api/ventas/[id]` cancellation bug (with test first)
 - [ ] Tier 3: install Playwright, write auth flow E2E tests
+- [ ] Tier 3: venta creation wizard golden path E2E
