@@ -93,6 +93,44 @@ describe("POST /api/ventas", () => {
   })
 })
 
+describe("POST /api/ventas — input guard", () => {
+  it("returns 400 when an item has quantity 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5 })
+
+    const req = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ productId: prod.id, quantity: 0, price: 100 }],
+        discount: 0,
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error).toMatch(/cantidad/i)
+  })
+
+  it("returns 404 when selling a soft-deleted (inactive) product", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5, active: false })
+
+    const req = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ productId: prod.id, quantity: 1, price: 100 }],
+        discount: 0,
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(404)
+  })
+})
+
 describe("POST /api/ventas — stock guard", () => {
   it("returns 422 when sale would bring stock to 0", async () => {
     const cat = await createCategoria()
@@ -191,6 +229,38 @@ describe("PATCH /api/ventas/[id] — cancellation", () => {
     })
     expect(movements.length).toBeGreaterThan(0)
     expect(movements[0].quantity).toBe(4)
+  })
+
+  it("returns 409 when cancelling an already-cancelled sale", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 10 })
+
+    const createReq = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ productId: prod.id, quantity: 2, price: 100 }],
+        discount: 0,
+      }),
+    })
+    const createRes = await POST(createReq)
+    const sale = await createRes.json()
+
+    const cancelReq = () =>
+      new NextRequest(`http://localhost/api/ventas/${sale.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      })
+
+    await PATCH(cancelReq(), { params: Promise.resolve({ id: sale.id }) })
+    const secondRes = await PATCH(cancelReq(), { params: Promise.resolve({ id: sale.id }) })
+
+    expect(secondRes.status).toBe(409)
+
+    // Stock must not have been restored twice
+    const final = await prisma.producto.findUnique({ where: { id: prod.id } })
+    expect(final!.stock).toBe(10)
   })
 
   it("does not touch stock when updating status to non-cancelled", async () => {

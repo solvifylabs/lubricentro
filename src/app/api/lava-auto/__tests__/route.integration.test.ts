@@ -64,6 +64,46 @@ describe("POST /api/lava-auto", () => {
     expect(movement!.quantity).toBe(2)
   })
 
+  it("returns 400 when a product has quantity 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5 })
+
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plate: "DDD444",
+        washType: "integro",
+        amount: 2000,
+        products: [{ productId: prod.id, quantity: 0 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error).toMatch(/cantidad/i)
+  })
+
+  it("returns 404 when using a soft-deleted (inactive) product", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5, active: false })
+
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plate: "EEE555",
+        washType: "exterior",
+        amount: 1500,
+        products: [{ productId: prod.id, quantity: 1 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(404)
+  })
+
   it("returns 422 when product usage would bring stock to 0", async () => {
     const cat = await createCategoria()
     const prod = await createProducto(cat.id, { stock: 2 })

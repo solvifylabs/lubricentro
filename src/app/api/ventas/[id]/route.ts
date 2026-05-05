@@ -22,6 +22,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params
   const { status } = await request.json()
 
+  const current = await prisma.venta.findUnique({ where: { id }, select: { status: true } })
+  if (!current) return NextResponse.json({ error: "No encontrado" }, { status: 404 })
+  if (current.status === "cancelled")
+    return NextResponse.json({ error: "La venta ya está cancelada" }, { status: 409 })
+
   const sale = await prisma.$transaction(async (tx) => {
     const updated = await tx.venta.update({ where: { id }, data: { status } })
 

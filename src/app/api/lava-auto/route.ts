@@ -38,16 +38,23 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ sessions, total, page, pageSize: PAGE_SIZE })
 }
 
+class StockGuardError extends Error {
+  constructor(msg: string) { super(msg); this.name = "StockGuardError" }
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
   if (body.products?.length > 0) {
     for (const item of body.products as { productId: string; quantity: number }[]) {
+      if (!item.quantity || item.quantity < 1)
+        return NextResponse.json({ error: "La cantidad debe ser al menos 1" }, { status: 400 })
+
       const product = await prisma.producto.findUnique({
         where: { id: item.productId },
-        select: { stock: true, name: true },
+        select: { stock: true, name: true, active: true },
       })
-      if (!product)
+      if (!product || !product.active)
         return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
       if (product.stock - item.quantity < 1)
         return NextResponse.json(
@@ -57,42 +64,52 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const session = await prisma.$transaction(async (tx) => {
-    const turnoId = await resolveOrCreateTurno(tx)
+  let session
+  try {
+    session = await prisma.$transaction(async (tx) => {
+      const turnoId = await resolveOrCreateTurno(tx)
 
-    const ses = await tx.sesionLavaAuto.create({
-      data: {
-        plate: body.plate || null,
-        washType: body.washType || "integro",
-        amount: body.amount,
-        notes: body.notes || null,
-        sessionDate: body.sessionDate ? new Date(body.sessionDate) : new Date(),
-        turnoId,
-      },
-    })
+      const ses = await tx.sesionLavaAuto.create({
+        data: {
+          plate: body.plate || null,
+          washType: body.washType || "integro",
+          amount: body.amount,
+          notes: body.notes || null,
+          sessionDate: body.sessionDate ? new Date(body.sessionDate) : new Date(),
+          turnoId,
+        },
+      })
 
-    if (body.products && body.products.length > 0) {
-      for (const item of body.products as { productId: string; quantity: number }[]) {
-        await tx.sesionProducto.create({
-          data: { sessionId: ses.id, productId: item.productId, quantity: item.quantity },
-        })
-        await tx.producto.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        })
-        await tx.movimientoStock.create({
-          data: {
-            productId: item.productId,
-            type: "exit",
-            quantity: item.quantity,
-            reason: `Lavado #${ses.id.slice(-6)}`,
-          },
-        })
+      if (body.products && body.products.length > 0) {
+        for (const item of body.products as { productId: string; quantity: number }[]) {
+          await tx.sesionProducto.create({
+            data: { sessionId: ses.id, productId: item.productId, quantity: item.quantity },
+          })
+          const updated = await tx.producto.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+            select: { stock: true, name: true },
+          })
+          if (updated.stock < 1)
+            throw new StockGuardError(`Stock insuficiente para "${updated.name}"`)
+          await tx.movimientoStock.create({
+            data: {
+              productId: item.productId,
+              type: "exit",
+              quantity: item.quantity,
+              reason: `Lavado #${ses.id.slice(-6)}`,
+            },
+          })
+        }
       }
-    }
 
-    return ses
-  })
+      return ses
+    })
+  } catch (e) {
+    if (e instanceof StockGuardError)
+      return NextResponse.json({ error: e.message }, { status: 422 })
+    throw e
+  }
 
   return NextResponse.json(session, { status: 201 })
 }
