@@ -45,6 +45,11 @@ class StockGuardError extends Error {
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
+  if (body.vehicleId) {
+    const vehicle = await prisma.vehiculo.findUnique({ where: { id: body.vehicleId }, select: { id: true } })
+    if (!vehicle) return NextResponse.json({ error: "Vehículo no encontrado" }, { status: 404 })
+  }
+
   if (body.products?.length > 0) {
     for (const item of body.products as { productId: string; quantity: number }[]) {
       if (!item.quantity || item.quantity < 1)
@@ -72,6 +77,7 @@ export async function POST(request: NextRequest) {
       const ses = await tx.sesionLavaAuto.create({
         data: {
           plate: body.plate || null,
+          vehicleId: body.vehicleId || null,
           washType: body.washType || "integro",
           amount: body.amount,
           notes: body.notes || null,

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from "next/server"
+import { Prisma } from "@prisma/client"
 import prisma from "@/lib/prisma"
 
 export async function GET(request: NextRequest) {
@@ -39,17 +40,25 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const vehicle = await prisma.vehiculo.create({
-    data: {
-      plate: body.plate.toUpperCase(),
-      brand: body.brand,
-      model: body.model,
-      year: Number(body.year),
-      engine: body.engine,
-      clientId: body.clientId,
-    },
-    include: { client: true },
-  })
+  const client = await prisma.cliente.findUnique({ where: { id: body.clientId }, select: { id: true } })
+  if (!client) return NextResponse.json({ error: "Cliente no encontrado" }, { status: 404 })
 
-  return NextResponse.json(vehicle, { status: 201 })
+  try {
+    const vehicle = await prisma.vehiculo.create({
+      data: {
+        plate: body.plate.toUpperCase(),
+        brand: body.brand,
+        model: body.model,
+        year: Number(body.year),
+        engine: body.engine,
+        clientId: body.clientId,
+      },
+      include: { client: true },
+    })
+    return NextResponse.json(vehicle, { status: 201 })
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")
+      return NextResponse.json({ error: "Patente ya registrada" }, { status: 409 })
+    throw e
+  }
 }

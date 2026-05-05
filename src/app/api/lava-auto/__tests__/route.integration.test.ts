@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterAll } from "vitest"
 import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
 import { POST } from "@/app/api/lava-auto/route"
-import { cleanDatabase, createCategoria, createProducto } from "@/tests/setup/helpers"
+import { cleanDatabase, createCategoria, createProducto, createCliente, createVehiculo } from "@/tests/setup/helpers"
 
 beforeEach(async () => {
   await cleanDatabase()
@@ -164,6 +164,51 @@ describe("POST /api/lava-auto", () => {
 
     const updated = await prisma.producto.findUnique({ where: { id: prod.id } })
     expect(updated!.stock).toBe(1)
+  })
+
+  it("creates a session linked to a registered vehicle when vehicleId is provided", async () => {
+    const cliente = await createCliente()
+    const vehiculo = await createVehiculo(cliente.id)
+
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vehicleId: vehiculo.id,
+        washType: "integro",
+        amount: 2000,
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(body.vehicleId).toBe(vehiculo.id)
+  })
+
+  it("creates a session with plate only (walk-in, unregistered vehicle)", async () => {
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plate: "WALKIN01", washType: "exterior", amount: 1500 }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(body.plate).toBe("WALKIN01")
+    expect(body.vehicleId).toBeNull()
+  })
+
+  it("returns 404 when vehicleId does not exist", async () => {
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId: "non-existent-id", washType: "integro", amount: 2000 }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(404)
   })
 
   it("creates or reuses a TurnoLavaAuto for today on each session", async () => {

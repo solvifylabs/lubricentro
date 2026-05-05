@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto"
 import prisma from "@/lib/prisma"
 
 export async function createCategoria(name = `cat-${Date.now()}`) {
@@ -35,7 +36,7 @@ export async function createCliente() {
 export async function createVehiculo(clientId: string) {
   return prisma.vehiculo.create({
     data: {
-      plate: `TST${Date.now()}`.slice(0, 10),
+      plate: randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase(),
       brand: "Toyota",
       model: "Corolla",
       year: 2020,

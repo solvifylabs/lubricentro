@@ -77,9 +77,10 @@ model Vehiculo {
   engine    String
   clientId  String
   client    Cliente    @relation(fields: [clientId], references: [id])
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  services  Servicio[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  services     Servicio[]
+  washSessions SesionLavaAuto[]
 }
 
 model Servicio {
@@ -193,6 +194,8 @@ model TurnoLavaAuto {
 model SesionLavaAuto {
   id          String           @id @default(cuid())
   plate       String?
+  vehicleId   String?
+  vehicle     Vehiculo?        @relation(fields: [vehicleId], references: [id])
   washType    String           @default("integro") // "interior" | "exterior" | "integro"
   amount      Decimal          @db.Decimal(10, 2)
   notes       String?

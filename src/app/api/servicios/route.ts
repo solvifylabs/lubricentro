@@ -46,6 +46,11 @@ class StockGuardError extends Error {
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
+  if (body.vehicleId) {
+    const vehicle = await prisma.vehiculo.findUnique({ where: { id: body.vehicleId }, select: { id: true } })
+    if (!vehicle) return NextResponse.json({ error: "Vehículo no encontrado" }, { status: 404 })
+  }
+
   if (body.products?.length > 0) {
     for (const item of body.products as { productId: string; quantity: number }[]) {
       if (!item.quantity || item.quantity < 1)

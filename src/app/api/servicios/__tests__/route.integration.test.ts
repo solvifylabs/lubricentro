@@ -178,6 +178,17 @@ describe("POST /api/servicios", () => {
     expect(updated!.stock).toBe(1)
   })
 
+  it("returns 404 when vehicleId does not exist", async () => {
+    const req = new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId: "non-existent-id", amount: 5000, products: [] }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(404)
+  })
+
   it("creates a servicio without a vehicle (anonymous)", async () => {
     const req = new NextRequest("http://localhost/api/servicios", {
       method: "POST",
