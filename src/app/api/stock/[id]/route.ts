@@ -22,13 +22,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params
   const body = await request.json()
 
+  if (!body.brandId)
+    return NextResponse.json({ error: "Marca requerida" }, { status: 400 })
+  if (!body.minStock || body.minStock < 1)
+    return NextResponse.json({ error: "Stock mínimo debe ser al menos 1" }, { status: 400 })
+
   const product = await prisma.producto.update({
     where: { id },
     data: {
       name: body.name,
       code: body.code || null,
       categoryId: body.categoryId,
-      brandId: body.brandId || null,
+      brandId: body.brandId,
       buyPrice: body.buyPrice,
       sellPrice: body.sellPrice,
       minStock: body.minStock,

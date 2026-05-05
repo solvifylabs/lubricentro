@@ -42,6 +42,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
+  if (body.products?.length > 0) {
+    for (const item of body.products as { productId: string; quantity: number }[]) {
+      const product = await prisma.producto.findUnique({
+        where: { id: item.productId },
+        select: { stock: true, name: true },
+      })
+      if (!product)
+        return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
+      if (product.stock - item.quantity < 1)
+        return NextResponse.json(
+          { error: `Stock insuficiente para "${product.name}". Disponible: ${product.stock}` },
+          { status: 422 }
+        )
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const service = await prisma.$transaction(async (tx: any) => {
     const turnoId = await resolveOrCreateTurno(tx)

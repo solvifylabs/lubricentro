@@ -60,9 +60,13 @@ Requires `next-test-api-route-handler` and a dedicated test PostgreSQL schema.
 3. `POST /api/lava-auto` → same pattern
 4. `PATCH /api/ventas/[id]` cancel → stock IS restored + MovimientoStock entry created (**bug fix**)
 5. `DELETE /api/stock/[id]` → soft delete (`active = false`), not hard delete
-6. `POST /api/stock` with `stock > 0` → MovimientoStock "entry" created
+6. `POST /api/stock` → category required, brand required, minStock ≥ 1, initial stock ≥ 1; MovimientoStock "entry" always created
+7. `PATCH /api/stock/[id]` → brand required, minStock ≥ 1 enforced on update
+8. Stock guard (all three operation endpoints) → 422 when sale/service/wash would bring stock to 0 or below
 
-**Status:** ✅ Implemented
+**Stock invariant enforced everywhere:** `stock - quantity ≥ 1` before any transaction. Pre-flight check returns 422 with a descriptive message. This is validated BEFORE the DB transaction.
+
+**Status:** ✅ Implemented — 31 tests, 4 files, all green
 
 ---
 
@@ -102,23 +106,28 @@ src/
   lib/
     auth/
       __tests__/
-        roles.test.ts        ✅ Tier 1
+        roles.test.ts                          ✅ Tier 1
     __tests__/
-      turno.test.ts          ✅ Tier 1
+      turno.test.ts                            ✅ Tier 1
   app/
     api/
       ventas/
         __tests__/
-          route.test.ts      🔜 Tier 2
+          route.integration.test.ts            ✅ Tier 2
       servicios/
         __tests__/
-          route.test.ts      🔜 Tier 2
+          route.integration.test.ts            ✅ Tier 2
       lava-auto/
         __tests__/
-          route.test.ts      🔜 Tier 2
+          route.integration.test.ts            ✅ Tier 2
       stock/
         __tests__/
-          route.test.ts      🔜 Tier 2
+          route.integration.test.ts            ✅ Tier 2
+  tests/
+    setup/
+      container.ts   # Testcontainers globalSetup
+      env.ts         # DATABASE_URL propagation to workers
+      helpers.ts     # test factories + cleanDatabase
 ```
 
 ---
@@ -134,7 +143,7 @@ LavaAuto POST ───┘
 
 resolveOrCreateTurno ◄── shared by all three (date-sensitive, side-effectful)
 
-Venta PATCH (cancel) ──► BUG: should restore stock but doesn't
+Venta PATCH (cancel) ──► stock restored + compensating MovimientoStock created (bug fixed)
 ```
 
 ---
@@ -177,6 +186,11 @@ Document WHY whenever `--no-verify` is used.
 8. ✅ Create `src/tests/setup/helpers.ts` (test factories + cleanDatabase)
 9. ✅ Write Tier 2 integration tests (`stock`, `ventas`, `servicios`, `lava-auto`)
 10. ✅ Fix `PATCH /api/ventas/[id]` cancellation bug — now restores stock atomically
+11. ✅ Extend stock validation (POST: category required, brand required, minStock ≥ 1, stock ≥ 1)
+12. ✅ Extend PATCH validation (brand required, minStock ≥ 1)
+13. ✅ Add stock guard (422) to ventas, servicios, lava-auto routes
+14. ✅ Add `createMarca` to test helpers
+15. ✅ All 31 integration tests green
 
 ## Running Tests
 

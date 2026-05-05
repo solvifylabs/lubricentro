@@ -93,6 +93,64 @@ describe("POST /api/ventas", () => {
   })
 })
 
+describe("POST /api/ventas — stock guard", () => {
+  it("returns 422 when sale would bring stock to 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5 })
+
+    const req = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ productId: prod.id, quantity: 5, price: 100 }],
+        discount: 0,
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toMatch(/stock insuficiente/i)
+  })
+
+  it("returns 422 when sale would bring stock below 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 3 })
+
+    const req = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ productId: prod.id, quantity: 10, price: 100 }],
+        discount: 0,
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(422)
+  })
+
+  it("allows sale that leaves exactly 1 unit in stock", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5 })
+
+    const req = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: [{ productId: prod.id, quantity: 4, price: 100 }],
+        discount: 0,
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+
+    const updated = await prisma.producto.findUnique({ where: { id: prod.id } })
+    expect(updated!.stock).toBe(1)
+  })
+})
+
 describe("PATCH /api/ventas/[id] — cancellation", () => {
   it("restores stock and creates a MovimientoStock entry on cancellation", async () => {
     const cat = await createCategoria()

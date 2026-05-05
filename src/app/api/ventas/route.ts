@@ -40,6 +40,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
+  for (const item of body.items as { productId: string; quantity: number; price: number }[]) {
+    const product = await prisma.producto.findUnique({
+      where: { id: item.productId },
+      select: { stock: true, name: true },
+    })
+    if (!product)
+      return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
+    if (product.stock - item.quantity < 1)
+      return NextResponse.json(
+        { error: `Stock insuficiente para "${product.name}". Disponible: ${product.stock}` },
+        { status: 422 }
+      )
+  }
+
   const total =
     body.items.reduce(
       (acc: number, item: { quantity: number; price: number }) =>

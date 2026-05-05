@@ -64,6 +64,68 @@ describe("POST /api/lava-auto", () => {
     expect(movement!.quantity).toBe(2)
   })
 
+  it("returns 422 when product usage would bring stock to 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 2 })
+
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plate: "AAA111",
+        washType: "integro",
+        amount: 2000,
+        products: [{ productId: prod.id, quantity: 2 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toMatch(/stock insuficiente/i)
+  })
+
+  it("returns 422 when product usage would bring stock below 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 1 })
+
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plate: "BBB222",
+        washType: "exterior",
+        amount: 1500,
+        products: [{ productId: prod.id, quantity: 5 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(422)
+  })
+
+  it("allows wash that leaves exactly 1 unit in stock", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 5 })
+
+    const req = new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plate: "CCC333",
+        washType: "interior",
+        amount: 1800,
+        products: [{ productId: prod.id, quantity: 4 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+
+    const updated = await prisma.producto.findUnique({ where: { id: prod.id } })
+    expect(updated!.stock).toBe(1)
+  })
+
   it("creates or reuses a TurnoLavaAuto for today on each session", async () => {
     const req1 = new NextRequest("http://localhost/api/lava-auto", {
       method: "POST",

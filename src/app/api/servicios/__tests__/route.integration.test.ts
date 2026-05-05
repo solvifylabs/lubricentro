@@ -83,6 +83,65 @@ describe("POST /api/servicios", () => {
     expect(movements.map((m) => m.quantity).sort()).toEqual([1, 3])
   })
 
+  it("returns 422 when product usage would bring stock to 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 3 })
+    const cliente = await createCliente()
+    const vehiculo = await createVehiculo(cliente.id)
+
+    const req = new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vehicleId: vehiculo.id,
+        amount: 5000,
+        products: [{ productId: prod.id, quantity: 3, price: 150 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(422)
+    const body = await res.json()
+    expect(body.error).toMatch(/stock insuficiente/i)
+  })
+
+  it("returns 422 when product usage would bring stock below 0", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 2 })
+
+    const req = new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: 5000,
+        products: [{ productId: prod.id, quantity: 10, price: 150 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(422)
+  })
+
+  it("allows service that leaves exactly 1 unit in stock", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 4 })
+
+    const req = new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: 5000,
+        products: [{ productId: prod.id, quantity: 3, price: 150 }],
+      }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+
+    const updated = await prisma.producto.findUnique({ where: { id: prod.id } })
+    expect(updated!.stock).toBe(1)
+  })
+
   it("creates a servicio without a vehicle (anonymous)", async () => {
     const req = new NextRequest("http://localhost/api/servicios", {
       method: "POST",

@@ -4,6 +4,10 @@ export async function createCategoria(name = `cat-${Date.now()}`) {
   return prisma.categoria.create({ data: { name } })
 }
 
+export async function createMarca(name = `marca-${Date.now()}`) {
+  return prisma.marca.create({ data: { name } })
+}
+
 export async function createProducto(
   categoryId: string,
   overrides: Record<string, unknown> = {}
