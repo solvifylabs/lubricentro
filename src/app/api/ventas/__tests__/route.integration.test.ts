@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest"
 import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
-import { POST } from "@/app/api/ventas/route"
+import { GET, POST } from "@/app/api/ventas/route"
 import { PATCH } from "@/app/api/ventas/[id]/route"
 import { cleanDatabase, createCategoria, createProducto } from "@/tests/setup/helpers"
 
@@ -303,5 +303,60 @@ describe("PATCH /api/ventas/[id] — cancellation", () => {
 
     const product = await prisma.producto.findUnique({ where: { id: prod.id } })
     expect(product!.stock).toBe(8) // unchanged from the sale decrement
+  })
+})
+
+// ─── GET /api/ventas ──────────────────────────────────────────────────────────
+
+describe("GET /api/ventas", () => {
+  it("returns today's sales including items and client relation", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 10 })
+
+    await POST(new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [{ productId: prod.id, quantity: 1, price: 100 }], discount: 0 }),
+    }))
+
+    const res = await GET(new NextRequest("http://localhost/api/ventas"))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.length).toBeGreaterThan(0)
+    expect(body[0]).toHaveProperty("items")
+  })
+
+  it("returns empty array when no sales exist today", async () => {
+    const res = await GET(new NextRequest("http://localhost/api/ventas"))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toEqual([])
+  })
+
+  it("returns only cancelled sales still appear in the list (no status filter)", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 10 })
+
+    const createRes = await POST(new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [{ productId: prod.id, quantity: 1, price: 100 }], discount: 0 }),
+    }))
+    const sale = await createRes.json()
+
+    await PATCH(
+      new NextRequest(`http://localhost/api/ventas/${sale.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      }),
+      { params: Promise.resolve({ id: sale.id }) }
+    )
+
+    const res = await GET(new NextRequest("http://localhost/api/ventas"))
+    const body = await res.json()
+    const found = body.find((s: { id: string }) => s.id === sale.id)
+    expect(found).toBeDefined()
+    expect(found.status).toBe("cancelled")
   })
 })

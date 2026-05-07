@@ -83,7 +83,6 @@ describe("POST /api/vehiculos — creation", () => {
 
   it("returns 409 when plate is already registered", async () => {
     const cliente = await createCliente()
-    await createVehiculo(cliente.id) // plate is deterministic per test via Date.now — use explicit plate
 
     // Create first vehicle directly
     await prisma.vehiculo.create({

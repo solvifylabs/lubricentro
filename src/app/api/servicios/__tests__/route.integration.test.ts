@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest"
 import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
-import { POST } from "@/app/api/servicios/route"
+import { GET, POST } from "@/app/api/servicios/route"
 import {
   cleanDatabase,
   createCategoria,
@@ -204,5 +204,56 @@ describe("POST /api/servicios", () => {
 
     const body = await res.json()
     expect(body.vehicleId).toBeNull()
+  })
+})
+
+// ─── GET /api/servicios ───────────────────────────────────────────────────────
+
+describe("GET /api/servicios", () => {
+  it("returns empty array when no services exist", async () => {
+    const res = await GET(new NextRequest("http://localhost/api/servicios"))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toEqual([])
+  })
+
+  it("returns services with nested vehicle and client", async () => {
+    const cliente = await createCliente()
+    const vehiculo = await createVehiculo(cliente.id)
+
+    await POST(new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId: vehiculo.id, mileage: 30000, amount: 5000, products: [] }),
+    }))
+
+    const res = await GET(new NextRequest("http://localhost/api/servicios"))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.length).toBeGreaterThan(0)
+    expect(body[0].vehicle).toBeDefined()
+    expect(body[0].vehicle.client.id).toBe(cliente.id)
+  })
+
+  it("filters by plate search term", async () => {
+    const cliente = await createCliente()
+    const v1 = await createVehiculo(cliente.id)
+    const v2 = await createVehiculo(cliente.id)
+
+    await POST(new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId: v1.id, amount: 1000, products: [] }),
+    }))
+    await POST(new NextRequest("http://localhost/api/servicios", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleId: v2.id, amount: 2000, products: [] }),
+    }))
+
+    const res = await GET(new NextRequest(`http://localhost/api/servicios?search=${v1.plate}`))
+    const body = await res.json()
+    expect(body).toHaveLength(1)
+    expect(body[0].vehicle.plate).toBe(v1.plate)
   })
 })

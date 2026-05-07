@@ -117,5 +117,6 @@ export async function POST(request: NextRequest) {
     throw e
   }
 
+  // Prisma serializes Decimal fields (e.g. `total`) as strings in JSON — callers must parse them
   return NextResponse.json(sale, { status: 201 })
 }

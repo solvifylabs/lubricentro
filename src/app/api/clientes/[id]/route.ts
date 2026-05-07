@@ -30,6 +30,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params
   const body = await request.json()
 
+  if (!body.firstName || !body.firstName.trim())
+    return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
+
   const client = await prisma.cliente.update({
     where: { id },
     data: {

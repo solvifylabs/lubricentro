@@ -110,6 +110,34 @@ describe("GET /api/clientes/[id]", () => {
 // ─── PATCH /api/clientes/[id] ─────────────────────────────────────────────────
 
 describe("PATCH /api/clientes/[id]", () => {
+  it("returns 400 when firstName is empty", async () => {
+    const cliente = await createCliente()
+
+    const req = new NextRequest(`http://localhost/api/clientes/${cliente.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName: "", phone: "999" }),
+    })
+    const res = await PATCH(req, { params: Promise.resolve({ id: cliente.id }) })
+
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error).toMatch(/nombre/i)
+  })
+
+  it("returns 400 when firstName is whitespace only", async () => {
+    const cliente = await createCliente()
+
+    const req = new NextRequest(`http://localhost/api/clientes/${cliente.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName: "   " }),
+    })
+    const res = await PATCH(req, { params: Promise.resolve({ id: cliente.id }) })
+
+    expect(res.status).toBe(400)
+  })
+
   it("updates client fields", async () => {
     const cliente = await createCliente()
 

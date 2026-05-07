@@ -1,11 +1,11 @@
 import { randomUUID } from "crypto"
 import prisma from "@/lib/prisma"
 
-export async function createCategoria(name = `cat-${Date.now()}`) {
+export async function createCategoria(name = `cat-${Date.now()}-${randomUUID().slice(0, 8)}`) {
   return prisma.categoria.create({ data: { name } })
 }
 
-export async function createMarca(name = `marca-${Date.now()}`) {
+export async function createMarca(name = `marca-${Date.now()}-${randomUUID().slice(0, 8)}`) {
   return prisma.marca.create({ data: { name } })
 }
 
@@ -15,7 +15,7 @@ export async function createProducto(
 ) {
   return prisma.producto.create({
     data: {
-      name: `producto-${Date.now()}`,
+      name: `producto-${Date.now()}-${randomUUID().slice(0, 8)}`,
       categoryId,
       buyPrice: 100,
       sellPrice: 150,
@@ -59,6 +59,7 @@ export async function cleanDatabase() {
   await prisma.vehiculo.deleteMany()
   await prisma.proveedorProducto.deleteMany()
   await prisma.compra.deleteMany()
+  await prisma.configLavaAuto.deleteMany()
   await prisma.producto.deleteMany()
   await prisma.categoria.deleteMany()
   await prisma.marca.deleteMany()

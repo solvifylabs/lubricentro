@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest"
 import { NextRequest } from "next/server"
 import prisma from "@/lib/prisma"
-import { POST } from "@/app/api/lava-auto/route"
+import { GET, POST } from "@/app/api/lava-auto/route"
 import { cleanDatabase, createCategoria, createProducto, createCliente, createVehiculo } from "@/tests/setup/helpers"
 
 beforeEach(async () => {
@@ -233,5 +233,57 @@ describe("POST /api/lava-auto", () => {
     const sessions = await prisma.sesionLavaAuto.findMany()
     expect(sessions).toHaveLength(2)
     expect(sessions[0].turnoId).toBe(sessions[1].turnoId)
+  })
+})
+
+// ─── GET /api/lava-auto ───────────────────────────────────────────────────────
+
+describe("GET /api/lava-auto", () => {
+  it("returns paginated response shape when no sessions exist", async () => {
+    const res = await GET(new NextRequest("http://localhost/api/lava-auto"))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body).toHaveProperty("sessions")
+    expect(body).toHaveProperty("total")
+    expect(body).toHaveProperty("page")
+    expect(body).toHaveProperty("pageSize")
+    expect(body.sessions).toEqual([])
+    expect(body.total).toBe(0)
+  })
+
+  it("returns sessions with turno and products included", async () => {
+    const cat = await createCategoria()
+    const prod = await createProducto(cat.id, { stock: 20 })
+
+    await POST(new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plate: "TST001",
+        washType: "integro",
+        amount: 2000,
+        products: [{ productId: prod.id, quantity: 1 }],
+      }),
+    }))
+
+    const res = await GET(new NextRequest("http://localhost/api/lava-auto"))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.total).toBe(1)
+    expect(body.sessions[0].turno).toBeDefined()
+    expect(body.sessions[0].products).toHaveLength(1)
+  })
+
+  it("page=2 returns empty when only one page of results exists", async () => {
+    await POST(new NextRequest("http://localhost/api/lava-auto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plate: "PG001", washType: "exterior", amount: 1000 }),
+    }))
+
+    const res = await GET(new NextRequest("http://localhost/api/lava-auto?page=2"))
+    const body = await res.json()
+    expect(body.page).toBe(2)
+    expect(body.sessions).toEqual([])
   })
 })
