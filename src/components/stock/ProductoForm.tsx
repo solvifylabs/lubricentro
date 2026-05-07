@@ -30,6 +30,10 @@ const schema = z.object({
   stock: z.coerce.number().int().min(0),
   minStock: z.coerce.number().int().min(0),
   unit: z.string().min(1),
+  expectedConsumptionPerWash: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+    z.number().min(0).optional()
+  ),
 })
 
 type FormData = z.infer<typeof schema>
@@ -63,6 +67,9 @@ export function ProductoForm({ categories, brands, product }: ProductoFormProps)
       stock: product?.stock ?? 0,
       minStock: product?.minStock ?? 5,
       unit: product?.unit ?? "unidad",
+      expectedConsumptionPerWash: product?.expectedConsumptionPerWash
+        ? Number(product.expectedConsumptionPerWash)
+        : undefined,
     },
   })
 
@@ -172,6 +179,20 @@ export function ProductoForm({ categories, brands, product }: ProductoFormProps)
             <div className="space-y-1">
               <Label>Stock mínimo</Label>
               <Input type="number" {...register("minStock")} />
+            </div>
+
+            <div className="col-span-2 space-y-1">
+              <Label>Consumo esperado por lavado — Lava Auto</Label>
+              <Input
+                type="number"
+                step="0.0001"
+                min="0"
+                placeholder="Ej: 0.05 (opcional)"
+                {...register("expectedConsumptionPerWash")}
+              />
+              <p className="text-xs text-muted-foreground">
+                Cantidad de este producto esperada por cada lavado. Se usa para detectar desvíos de consumo.
+              </p>
             </div>
           </div>
 

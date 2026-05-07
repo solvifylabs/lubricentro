@@ -9,11 +9,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const client = await prisma.cliente.findUnique({
     where: { id },
     include: {
-      vehicles: { include: { services: { orderBy: { serviceDate: "desc" }, take: 5 } } },
-      services: {
-        include: { vehicle: true },
-        orderBy: { serviceDate: "desc" },
-        take: 10,
+      vehicles: {
+        include: {
+          services: { orderBy: { serviceDate: "desc" }, take: 5 },
+        },
       },
       sales: {
         include: { items: { include: { product: true } } },
@@ -30,6 +29,9 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await request.json()
+
+  if (!body.firstName || !body.firstName.trim())
+    return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
 
   const client = await prisma.cliente.update({
     where: { id },

@@ -7,32 +7,34 @@ import { ServicioForm } from "@/components/servicios/ServicioForm"
 export default async function NuevoServicioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vehicleId?: string; clientId?: string }>
+  searchParams: Promise<{ vehicleId?: string }>
 }) {
-  const { vehicleId, clientId } = await searchParams
+  const { vehicleId } = await searchParams
 
-  const [vehicles, clients, products] = await Promise.all([
-    prisma.vehiculo.findMany({ orderBy: { plate: "asc" } }),
-    prisma.cliente.findMany({
-      where: { active: true },
-      select: { id: true, firstName: true, lastName: true },
-      orderBy: { firstName: "asc" },
+  const [vehicles, products, serviceConfig] = await Promise.all([
+    prisma.vehiculo.findMany({
+      orderBy: { plate: "asc" },
+      include: {
+        client: { select: { id: true, firstName: true, lastName: true } },
+      },
     }),
     prisma.producto.findMany({
       where: { active: true },
       orderBy: { name: "asc" },
     }),
+    prisma.configServicio.findFirst(),
   ])
+
+  const defaultServicePrice = serviceConfig ? Number(serviceConfig.servicePrice) : 0
 
   return (
     <div className="container">
       <PageHeader title="Nuevo servicio" />
       <ServicioForm
         vehicles={vehicles}
-        clients={clients}
         products={products}
         defaultVehicleId={vehicleId}
-        defaultClientId={clientId}
+        defaultServicePrice={defaultServicePrice}
       />
     </div>
   )

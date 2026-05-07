@@ -39,7 +39,6 @@ export default async function ClientesPage({
       where,
       include: {
         vehicles: { select: { plate: true } },
-        _count: { select: { services: true } },
       },
       orderBy: { firstName: "asc" },
       skip,
@@ -120,19 +119,18 @@ export default async function ClientesPage({
               <TableHead>Teléfono</TableHead>
               <TableHead>DNI</TableHead>
               <TableHead className="text-center">Vehículos</TableHead>
-              <TableHead className="text-center">Servicios</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {clients.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-10">
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
                   No se encontraron clientes.
                 </TableCell>
               </TableRow>
             )}
-            {clients.map((c: Cliente & { vehicles: { plate: string }[]; _count: { services: number } }) => (
+            {clients.map((c: Cliente & { vehicles: { plate: string }[] }) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">
                   {c.firstName} {c.lastName ?? ""}
@@ -157,12 +155,6 @@ export default async function ClientesPage({
                   <span className="inline-flex items-center gap-1 text-sm font-medium">
                     <Car className="h-3 w-3 text-muted-foreground" />
                     {c.vehicles.length}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center">
-                  <span className="inline-flex items-center gap-1 text-sm font-medium">
-                    <Wrench className="h-3 w-3 text-muted-foreground" />
-                    {c._count.services}
                   </span>
                 </TableCell>
                 <TableCell>

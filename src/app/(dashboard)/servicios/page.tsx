@@ -30,8 +30,8 @@ export default async function ServiciosPage({
     ...(search && {
       OR: [
         { vehicle: { plate: { contains: search, mode: "insensitive" as const } } },
-        { client: { firstName: { contains: search, mode: "insensitive" as const } } },
-        { client: { lastName: { contains: search, mode: "insensitive" as const } } },
+        { vehicle: { client: { firstName: { contains: search, mode: "insensitive" as const } } } },
+        { vehicle: { client: { lastName: { contains: search, mode: "insensitive" as const } } } },
       ],
     }),
     ...(date && {
@@ -53,8 +53,7 @@ export default async function ServiciosPage({
     prisma.servicio.findMany({
       where,
       include: {
-        vehicle: true,
-        client: { select: { id: true, firstName: true, lastName: true, phone: true } },
+        vehicle: { include: { client: { select: { id: true, firstName: true, lastName: true, phone: true } } } },
       },
       orderBy: { serviceDate: "desc" },
       skip,
@@ -160,28 +159,34 @@ export default async function ServiciosPage({
                 </TableCell>
               </TableRow>
             )}
-            {services.map((s: Servicio & { vehicle: Vehiculo; client: Pick<Cliente, "id" | "firstName" | "lastName" | "phone"> | null }) => (
+            {services.map((s: Servicio & { vehicle: (Vehiculo & { client: Pick<Cliente, "id" | "firstName" | "lastName" | "phone"> }) | null }) => (
               <TableRow key={s.id}>
                 <TableCell className="text-sm">
                   {new Date(s.serviceDate).toLocaleDateString("es-AR")}
                 </TableCell>
                 <TableCell>
-                  <Link href={`/vehiculos/${s.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline">
-                    {s.vehicle.plate}
-                  </Link>
-                  <p className="text-xs text-muted-foreground mt-0.5">{s.vehicle.brand} {s.vehicle.model}</p>
+                  {s.vehicle ? (
+                    <>
+                      <Link href={`/vehiculos/${s.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline">
+                        {s.vehicle.plate}
+                      </Link>
+                      <p className="text-xs text-muted-foreground mt-0.5">{s.vehicle.brand} {s.vehicle.model}</p>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground text-sm italic">Sin vehículo</span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  {s.client ? (
+                  {s.vehicle?.client ? (
                     <div className="flex flex-col gap-1">
-                      <Link href={`/clientes/${s.client.id}`} className="hover:underline text-sm">
-                        {s.client.firstName} {s.client.lastName ?? ""}
+                      <Link href={`/clientes/${s.vehicle.client.id}`} className="hover:underline text-sm">
+                        {s.vehicle.client.firstName} {s.vehicle.client.lastName ?? ""}
                       </Link>
-                      {s.client.phone && (
+                      {s.vehicle.client.phone && (
                         <WhatsAppButton
-                          phone={s.client.phone}
+                          phone={s.vehicle.client.phone}
                           label="Recordatorio"
-                          message={`Hola ${s.client.firstName}! Te recordamos que tu próximo service es el ${s.nextServiceDate ? new Date(s.nextServiceDate).toLocaleDateString("es-AR") : "próximamente"}. ¡Cualquier consulta estamos a disposición!`}
+                          message={`Hola ${s.vehicle.client.firstName}! Te recordamos que tu próximo service es el ${s.nextServiceDate ? new Date(s.nextServiceDate).toLocaleDateString("es-AR") : "próximamente"}. ¡Cualquier consulta estamos a disposición!`}
                         />
                       )}
                     </div>

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { PageHeader } from "@/components/layout/PageHeader"
 import { StatsCards } from "@/components/dashboard/StatsCards"
+import { TurnoWidget } from "@/components/lava-auto/TurnoWidget"
 import prisma from "@/lib/prisma"
 import { AlertTriangle, Wrench, ShoppingCart, Plus, Receipt } from "lucide-react"
 import Link from "next/link"
@@ -48,7 +49,7 @@ async function getLowStockProducts() {
 
 async function getRecentServices() {
   return prisma.servicio.findMany({
-    include: { vehicle: true, client: true },
+    include: { vehicle: { include: { client: true } } },
     orderBy: { createdAt: "desc" },
     take: 5,
   })
@@ -126,6 +127,10 @@ export default async function DashboardPage() {
 
       <StatsCards cards={summaryCards} />
 
+      <div className="mb-6">
+        <TurnoWidget />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Low stock alert */}
         <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
@@ -181,7 +186,7 @@ export default async function DashboardPage() {
                 No hay servicios registrados.
               </p>
             ) : (
-              recentServices.map((s: Servicio & { vehicle: Vehiculo; client: Cliente | null }) => (
+              recentServices.map((s: Servicio & { vehicle: (Vehiculo & { client: Cliente }) | null }) => (
                 <Link
                   key={s.id}
                   href={`/servicios/${s.id}`}
@@ -189,11 +194,11 @@ export default async function DashboardPage() {
                 >
                   <div>
                     <p className="text-sm font-medium leading-tight">
-                      {s.vehicle.plate} — {s.vehicle.brand} {s.vehicle.model}
+                      {s.vehicle ? `${s.vehicle.plate} — ${s.vehicle.brand} ${s.vehicle.model}` : "Servicio anónimo"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {s.client
-                        ? `${s.client.firstName} ${s.client.lastName ?? ""}`
+                      {s.vehicle?.client
+                        ? `${s.vehicle.client.firstName} ${s.vehicle.client.lastName ?? ""}`
                         : "Sin cliente"}{" "}
                       · {new Date(s.serviceDate).toLocaleDateString("es-AR")}
                     </p>

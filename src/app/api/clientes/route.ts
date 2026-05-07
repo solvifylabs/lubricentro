@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     },
     include: {
       vehicles: { select: { id: true, plate: true, brand: true, model: true } },
-      _count: { select: { services: true, sales: true } },
+      _count: { select: { vehicles: true, sales: true } },
     },
     orderBy: { firstName: "asc" },
   })
@@ -31,6 +31,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
+
+  if (!body.firstName?.trim())
+    return NextResponse.json({ error: "Nombre requerido" }, { status: 400 })
 
   const client = await prisma.cliente.create({
     data: {
