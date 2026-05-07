@@ -1,10 +1,10 @@
-import { supabaseAdmin } from "@/lib/supabase/admin"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { Role } from "@/lib/auth/roles"
 import { Users } from "lucide-react"
 import { RoleSelector } from "./RoleSelector"
 
 export default async function AdminUsuariosPage() {
-  const { data, error } = await supabaseAdmin.auth.admin.listUsers()
+  const { data, error } = await createAdminClient().auth.admin.listUsers()
 
   if (error) {
     return (
