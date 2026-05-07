@@ -93,6 +93,22 @@ describe("POST /api/ventas", () => {
   })
 })
 
+describe("POST /api/ventas — zero items", () => {
+  it("creates a sale with no items attached (total=0)", async () => {
+    const req = new NextRequest("http://localhost/api/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [], discount: 0 }),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(body.total).toBe("0")
+    expect(body.status).toBe("completed")
+  })
+})
+
 describe("POST /api/ventas — input guard", () => {
   it("returns 400 when an item has quantity 0", async () => {
     const cat = await createCategoria()
