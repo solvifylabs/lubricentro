@@ -32,6 +32,7 @@
   ],
   "exclude": [
     "node_modules",
+    "prisma",
     "src/tests/**",
     "src/**/__tests__/**",
     "**/*.test.ts",
