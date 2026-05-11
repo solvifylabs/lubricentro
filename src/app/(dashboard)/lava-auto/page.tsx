@@ -47,6 +47,7 @@ export default async function LavaAutoPage({
         where: dateFilter,
         include: {
           _count: { select: { products: true } },
+          vehicle: { select: { id: true, plate: true } },
         },
         orderBy: { sessionDate: "desc" },
         skip,
@@ -169,7 +170,7 @@ export default async function LavaAutoPage({
                 </TableCell>
               </TableRow>
             )}
-            {(sessions as (SesionLavaAuto & { _count: { products: number } })[]).map((s) => (
+            {(sessions as (SesionLavaAuto & { _count: { products: number }; vehicle: { id: string; plate: string } | null })[]).map((s) => (
               <TableRow key={s.id}>
                 <TableCell className="text-sm text-muted-foreground tabular-nums">
                   {new Date(s.sessionDate).toLocaleTimeString("es-AR", {
@@ -179,9 +180,17 @@ export default async function LavaAutoPage({
                 </TableCell>
                 <TableCell>
                   {s.plate ? (
-                    <span className="font-mono font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 px-2 py-0.5 rounded-md text-sm">
-                      {s.plate}
-                    </span>
+                    s.vehicleId ? (
+                      <Link href={`/vehiculos/${s.vehicleId}`} className="hover:opacity-80 transition-opacity">
+                        <span className="font-mono font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 px-2 py-0.5 rounded-md text-sm">
+                          {s.plate}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span className="font-mono font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-400/10 px-2 py-0.5 rounded-md text-sm">
+                        {s.plate}
+                      </span>
+                    )
                   ) : (
                     <span className="text-muted-foreground text-sm italic">Anónimo</span>
                   )}

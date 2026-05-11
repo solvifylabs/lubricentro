@@ -5,12 +5,16 @@ import { LavaAutoForm } from "@/components/lava-auto/LavaAutoForm"
 import type { WashPrices } from "@/types"
 
 export default async function NuevoLavaAutoPage() {
-  const [products, config] = await Promise.all([
+  const [products, config, vehicles] = await Promise.all([
     prisma.producto.findMany({
       where: { active: true, stock: { gt: 0 } },
       orderBy: { name: "asc" },
     }),
     prisma.configLavaAuto.findFirst(),
+    prisma.vehiculo.findMany({
+      include: { client: true },
+      orderBy: { plate: "asc" },
+    }),
   ])
 
   const washPrices: WashPrices = config
@@ -23,7 +27,7 @@ export default async function NuevoLavaAutoPage() {
 
   return (
     <div className="container flex-1 flex flex-col min-h-0 py-6">
-      <LavaAutoForm products={products} washPrices={washPrices} />
+      <LavaAutoForm products={products} washPrices={washPrices} vehicles={vehicles} />
     </div>
   )
 }

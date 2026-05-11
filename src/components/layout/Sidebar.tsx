@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -12,7 +13,6 @@ import {
   BarChart3,
   LayoutDashboard,
   LogOut,
-  Droplets,
   Waves,
   ShieldCheck,
 } from "lucide-react"
@@ -48,11 +48,11 @@ export function Sidebar({ role }: { role: Role | null }) {
       {/* Logo */}
       <div className="p-5 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-yellow-400 shadow-lg shadow-yellow-400/25">
-            <Droplets className="h-5 w-5 text-gray-950" />
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-black border border-white/10 shrink-0">
+            <Image src="/logo.webp" alt="Solvify" width={22} height={22} />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white tracking-tight">Lavalle</h1>
+            <h1 className="text-sm font-bold text-white tracking-tight">Lubricentro</h1>
             <p className="text-[11px] text-gray-500 leading-none mt-0.5">Sistema de Gestión</p>
           </div>
         </div>

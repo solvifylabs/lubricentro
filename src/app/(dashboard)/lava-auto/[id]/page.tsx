@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import prisma from "@/lib/prisma"
 import { DetailHeader } from "@/components/layout/DetailHeader"
@@ -18,6 +19,7 @@ export default async function LavaAutoDetailPage({
     where: { id },
     include: {
       turno: true,
+      vehicle: { include: { client: true } },
       products: {
         include: {
           product: { include: { brand: true } },
@@ -67,6 +69,17 @@ export default async function LavaAutoDetailPage({
               <span className="text-muted-foreground italic">Anónimo</span>
             )}
           </div>
+          {session.vehicle && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Cliente</span>
+              <Link
+                href={`/vehiculos/${session.vehicle.id}`}
+                className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {[session.vehicle.client.firstName, session.vehicle.client.lastName].filter(Boolean).join(" ")}
+              </Link>
+            </div>
+          )}
           {session.turno && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Turno</span>

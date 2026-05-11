@@ -18,6 +18,15 @@ import {
 } from "lucide-react"
 import type { Producto, WashPrices } from "@/types"
 
+type VehicleOption = {
+  id: string
+  plate: string
+  brand: string
+  model: string
+  year: number
+  client: { firstName: string; lastName: string | null }
+}
+
 type WashType = "interior" | "exterior" | "integro"
 
 type SesionItem = {
@@ -56,14 +65,19 @@ function priceForType(prices: WashPrices, type: WashType): number {
 export function LavaAutoForm({
   products,
   washPrices,
+  vehicles = [],
 }: {
   products: Producto[]
   washPrices: WashPrices
+  vehicles?: VehicleOption[]
 }) {
   const router = useRouter()
   const [step, setStep] = useState<StepId>(1)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [plate, setPlate] = useState("")
+  const [vehicleId, setVehicleId] = useState<string | null>(null)
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleOption | null>(null)
+  const [vehicleSearch, setVehicleSearch] = useState("")
   const [washType, setWashType] = useState<WashType>("integro")
   const [items, setItems] = useState<SesionItem[]>([])
   const [amount, setAmount] = useState(washPrices.priceIntegro)
@@ -82,6 +96,30 @@ export function LavaAutoForm({
   }
 
   const productCost = items.reduce((sum, i) => sum + i.quantity * i.buyPrice, 0)
+
+  const filteredVehicles = vehicleSearch
+    ? vehicles.filter((v) => {
+        const clientName = [v.client.firstName, v.client.lastName].filter(Boolean).join(" ")
+        return (
+          v.plate.toLowerCase().includes(vehicleSearch.toLowerCase()) ||
+          clientName.toLowerCase().includes(vehicleSearch.toLowerCase())
+        )
+      }).slice(0, 8)
+    : []
+
+  function selectVehicle(v: VehicleOption) {
+    setSelectedVehicle(v)
+    setVehicleId(v.id)
+    setPlate(v.plate)
+    setVehicleSearch("")
+  }
+
+  function clearVehicle() {
+    setSelectedVehicle(null)
+    setVehicleId(null)
+    setPlate("")
+    setVehicleSearch("")
+  }
 
   const filteredProducts = products.filter(
     (p) =>
@@ -122,6 +160,7 @@ export function LavaAutoForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plate: plate.trim() || null,
+          vehicleId: vehicleId || null,
           washType,
           amount,
           notes: notes.trim() || null,
@@ -231,19 +270,77 @@ export function LavaAutoForm({
                 )}
               </div>
               <div className="flex flex-col flex-1 min-h-0 p-5 gap-5">
+                {vehicles.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Vehículo registrado (opcional)</Label>
+                    {selectedVehicle ? (
+                      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-400/20">
+                        <Car className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold font-mono text-blue-700 dark:text-blue-400">{selectedVehicle.plate}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {[selectedVehicle.client.firstName, selectedVehicle.client.lastName].filter(Boolean).join(" ")} · {selectedVehicle.brand} {selectedVehicle.model} {selectedVehicle.year}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={clearVehicle}
+                          className="text-muted-foreground hover:text-foreground text-sm px-1 shrink-0"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <Input
+                          placeholder="Buscar por patente o cliente..."
+                          value={vehicleSearch}
+                          onChange={(e) => setVehicleSearch(e.target.value)}
+                        />
+                        {filteredVehicles.length > 0 && (
+                          <div className="absolute top-full mt-1.5 left-0 right-0 z-20 bg-card border rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                            {filteredVehicles.map((v) => (
+                              <button
+                                key={v.id}
+                                type="button"
+                                onClick={() => selectVehicle(v)}
+                                className="w-full text-left px-4 py-3 text-sm hover:bg-muted/60 flex items-center gap-3 transition-colors first:rounded-t-xl last:rounded-b-xl border-b last:border-b-0"
+                              >
+                                <span className="font-mono font-bold text-blue-700 dark:text-blue-400 shrink-0">{v.plate}</span>
+                                <span className="text-muted-foreground truncate">{[v.client.firstName, v.client.lastName].filter(Boolean).join(" ")} · {v.brand} {v.model}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {vehicleSearch && filteredVehicles.length === 0 && (
+                          <div className="absolute top-full mt-1.5 left-0 right-0 z-20 bg-card border rounded-xl shadow-xl">
+                            <p className="px-4 py-3 text-sm text-muted-foreground">Sin resultados</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="plate">Patente (opcional)</Label>
+                  <Label htmlFor="plate">Patente {selectedVehicle ? "" : "(opcional)"}</Label>
                   <Input
                     id="plate"
                     placeholder="Ej: ABC123"
                     value={plate}
-                    onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                    className="font-mono uppercase text-base tracking-widest"
-                    autoFocus
+                    onChange={(e) => !selectedVehicle && setPlate(e.target.value.toUpperCase())}
+                    readOnly={!!selectedVehicle}
+                    className={cn(
+                      "font-mono uppercase text-base tracking-widest",
+                      selectedVehicle && "bg-muted cursor-default"
+                    )}
+                    autoFocus={vehicles.length === 0}
                     maxLength={10}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Podés continuar sin identificar el vehículo.
+                    {selectedVehicle
+                      ? "Patente tomada del vehículo registrado."
+                      : "Podés continuar sin identificar el vehículo."}
                   </p>
                 </div>
 
@@ -279,7 +376,7 @@ export function LavaAutoForm({
                     variant="ghost"
                     size="sm"
                     className="gap-2 text-muted-foreground"
-                    onClick={() => { setPlate(""); goTo(2) }}
+                    onClick={() => { clearVehicle(); goTo(2) }}
                   >
                     Sin patente
                   </Button>
@@ -418,6 +515,11 @@ export function LavaAutoForm({
                       <p className="text-sm font-semibold font-mono">
                         {plate || "Anónimo"}
                       </p>
+                      {selectedVehicle && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {[selectedVehicle.client.firstName, selectedVehicle.client.lastName].filter(Boolean).join(" ")} · {selectedVehicle.brand} {selectedVehicle.model}
+                        </p>
+                      )}
                     </div>
                     <button
                       type="button"

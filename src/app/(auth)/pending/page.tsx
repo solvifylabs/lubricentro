@@ -18,6 +18,7 @@ export default async function PendingPage() {
   if (!user) redirect("/login")
 
   return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
     <div className="w-full max-w-sm">
       {/* Logo */}
       <div className="flex flex-col items-center mb-8">
@@ -58,6 +59,7 @@ export default async function PendingPage() {
           </button>
         </form>
       </div>
+    </div>
     </div>
   )
 }
