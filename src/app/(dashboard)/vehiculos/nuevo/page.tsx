@@ -1,26 +1,33 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
-import prisma from "@/lib/prisma"
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { VehiculoForm } from "@/components/vehiculos/VehiculoForm"
 
-export default async function NuevoVehiculoPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ clientId?: string }>
-}) {
-  const { clientId } = await searchParams
+function NuevoVehiculoPageInner() {
+  const searchParams = useSearchParams()
+  const clientId = searchParams.get("clientId") ?? undefined
 
-  const clients = await prisma.cliente.findMany({
-    where: { active: true },
-    select: { id: true, firstName: true, lastName: true },
-    orderBy: { firstName: "asc" },
-  })
+  const store = useDemoStore()
+  const clients = store.clientes
+    .filter((c) => c.active)
+    .sort((a, b) => a.firstName.localeCompare(b.firstName))
+    .map((c) => ({ id: c.id, firstName: c.firstName, lastName: c.lastName }))
 
   return (
     <div className="max-w-xl">
       <PageHeader title="Nuevo vehículo" />
       <VehiculoForm clients={clients} defaultClientId={clientId} />
     </div>
+  )
+}
+
+export default function NuevoVehiculoPage() {
+  return (
+    <Suspense>
+      <NuevoVehiculoPageInner />
+    </Suspense>
   )
 }

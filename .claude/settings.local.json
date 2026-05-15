@@ -4,7 +4,10 @@
       "mcp__plugin_engram_engram__mem_search",
       "mcp__plugin_engram_engram__mem_get_observation",
       "Bash(npx prisma *)",
-      "mcp__plugin_context-mode_context-mode__ctx_execute"
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "Bash(pnpm add *)",
+      "Bash(pnpm run *)"
     ]
   }
 }

@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,44 +12,36 @@ import {
 } from "@/components/ui/table"
 import { PaginationNav } from "@/components/ui/pagination-nav"
 import { Plus, Users, Car, Wrench, Phone } from "lucide-react"
-import type { Cliente } from "@/types"
 
 const PAGE_SIZE = 10
 
-export default async function ClientesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string; page?: string }>
-}) {
-  const { search = "", page = "1" } = await searchParams
-  const pageNum = Math.max(1, parseInt(page))
+function ClientesPageInner() {
+  const searchParams = useSearchParams()
+  const search = searchParams.get("search") ?? ""
+  const pageNum = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
   const skip = (pageNum - 1) * PAGE_SIZE
 
-  const where = {
-    active: true,
-    ...(search && {
-      OR: [
-        { firstName: { contains: search, mode: "insensitive" as const } },
-        { lastName: { contains: search, mode: "insensitive" as const } },
-        { phone: { contains: search } },
-      ],
-    }),
-  }
+  const store = useDemoStore()
 
-  const [clients, total, totalVehicles, totalServices] = await Promise.all([
-    prisma.cliente.findMany({
-      where,
-      include: {
-        vehicles: { select: { plate: true } },
-      },
-      orderBy: { firstName: "asc" },
-      skip,
-      take: PAGE_SIZE,
-    }),
-    prisma.cliente.count({ where }),
-    prisma.vehiculo.count(),
-    prisma.servicio.count(),
-  ])
+  const filtered = store.clientes.filter((c) => {
+    if (!c.active) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return (
+      c.firstName.toLowerCase().includes(q) ||
+      (c.lastName ?? "").toLowerCase().includes(q) ||
+      (c.phone ?? "").includes(search)
+    )
+  }).sort((a, b) => a.firstName.localeCompare(b.firstName))
+
+  const total = filtered.length
+  const clients = filtered.slice(skip, skip + PAGE_SIZE).map((c) => ({
+    ...c,
+    vehicles: store.vehiculos.filter((v) => v.clientId === c.id).map((v) => ({ plate: v.plate })),
+  }))
+
+  const totalVehicles = store.vehiculos.length
+  const totalServices = store.servicios.length
 
   const paginationParams: Record<string, string> = {}
   if (search) paginationParams.search = search
@@ -130,7 +124,7 @@ export default async function ClientesPage({
                 </TableCell>
               </TableRow>
             )}
-            {clients.map((c: Cliente & { vehicles: { plate: string }[] }) => (
+            {clients.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">
                   {c.firstName} {c.lastName ?? ""}
@@ -169,5 +163,13 @@ export default async function ClientesPage({
         <PaginationNav total={total} page={pageNum} pageSize={PAGE_SIZE} basePath="/clientes" params={paginationParams} />
       </div>
     </div>
+  )
+}
+
+export default function ClientesPage() {
+  return (
+    <Suspense>
+      <ClientesPageInner />
+    </Suspense>
   )
 }

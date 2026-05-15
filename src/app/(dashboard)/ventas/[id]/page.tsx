@@ -1,31 +1,33 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { use } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { CancelSaleButton } from "@/components/ventas/CancelSaleButton"
 import { ShoppingCart, User, Tag } from "lucide-react"
-import type { DetalleVenta, Producto } from "@/types"
 
-export default async function VentaDetailPage({
+export default function VentaDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const sale = await prisma.venta.findUnique({
-    where: { id },
-    include: {
-      client: true,
-      items: { include: { product: true } },
-    },
-  })
+  const sale = store.ventas.find((v) => v.id === id)
+  if (!sale) { notFound(); return null }
 
-  if (!sale) notFound()
+  const client = sale.clientId ? store.clientes.find((c) => c.id === sale.clientId) ?? null : null
+  const items = store.detallesVenta
+    .filter((d) => d.saleId === id)
+    .map((d) => ({
+      ...d,
+      product: store.productos.find((p) => p.id === d.productId)!,
+    }))
 
   const isCompleted = sale.status === "completed"
 
@@ -60,9 +62,9 @@ export default async function VentaDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Cliente</p>
-            {sale.client ? (
-              <Link href={`/clientes/${sale.client.id}`} className="font-medium text-sm hover:underline">
-                {sale.client.firstName} {sale.client.lastName ?? ""}
+            {client ? (
+              <Link href={`/clientes/${client.id}`} className="font-medium text-sm hover:underline">
+                {client.firstName} {client.lastName ?? ""}
               </Link>
             ) : (
               <p className="text-sm text-muted-foreground">Sin cliente</p>
@@ -78,7 +80,7 @@ export default async function VentaDetailPage({
           <p className="font-semibold text-sm">Productos</p>
         </div>
         <div className="px-5 py-4 space-y-3">
-          {sale.items.map((item: DetalleVenta & { product: Producto }) => (
+          {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between text-sm">
               <div>
                 <p className="font-medium">{item.product.name}</p>

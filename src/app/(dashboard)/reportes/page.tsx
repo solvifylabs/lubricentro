@@ -1,6 +1,8 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
-import prisma from "@/lib/prisma"
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { PeriodSelector } from "@/components/reportes/PeriodSelector"
 import { ReporteKPICards } from "@/components/reportes/ReporteKPICards"
@@ -9,9 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import type { Producto, Categoria } from "@/types"
-
-// ── Date range helpers ───────────────────────────────────────────────────────
 
 function getDateRange(period: string, from?: string, to?: string) {
   const now = new Date()
@@ -35,7 +34,6 @@ function getDateRange(period: string, from?: string, to?: string) {
       end: new Date(`${to}T23:59:59`),
     }
   }
-  // default: current month
   return {
     start: new Date(now.getFullYear(), now.getMonth(), 1),
     end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59),
@@ -44,149 +42,104 @@ function getDateRange(period: string, from?: string, to?: string) {
 
 function periodLabel(period: string, start: Date, end: Date) {
   if (period === "week") return "Últimos 7 días"
-  if (period === "month")
-    return `Mes: ${format(start, "MMMM yyyy", { locale: es })}`
+  if (period === "month") return `Mes: ${format(start, "MMMM yyyy", { locale: es })}`
   if (period === "year") return `Año ${start.getFullYear()}`
   return `${format(start, "d MMM yyyy", { locale: es })} – ${format(end, "d MMM yyyy", { locale: es })}`
 }
 
-// ── Data fetching ────────────────────────────────────────────────────────────
+function ReportesPageInner() {
+  const searchParams = useSearchParams()
+  const period = searchParams.get("period") ?? "month"
+  const from = searchParams.get("from") ?? undefined
+  const to = searchParams.get("to") ?? undefined
 
-async function getReportData(start: Date, end: Date, period: string) {
-  const [
-    salesAgg,
-    servicesAgg,
-    topProductsRaw,
-    topClientsRaw,
-    lowStock,
-    chartRaw,
-  ] = await Promise.all([
-    prisma.venta.aggregate({
-      where: { status: "completed", createdAt: { gte: start, lte: end } },
-      _sum: { total: true },
-      _count: true,
-    }),
-    prisma.servicio.aggregate({
-      where: { serviceDate: { gte: start, lte: end } },
-      _sum: { amount: true },
-      _count: true,
-    }),
-    prisma.detalleVenta.groupBy({
-      by: ["productId"],
-      where: { sale: { status: "completed", createdAt: { gte: start, lte: end } } },
-      _sum: { quantity: true },
-      orderBy: { _sum: { quantity: "desc" } },
-      take: 8,
-    }),
-    prisma.venta.groupBy({
-      by: ["clientId"],
-      where: {
-        status: "completed",
-        clientId: { not: null },
-        createdAt: { gte: start, lte: end },
-      },
-      _sum: { total: true },
-      _count: true,
-      orderBy: { _sum: { total: "desc" } },
-      take: 8,
-    }),
-    prisma.producto.findMany({
-      where: { active: true, stock: { lte: 5 } },
-      include: { category: true },
-      orderBy: { stock: "asc" },
-    }),
-    // Chart data: daily for week/month/custom, monthly for year
-    period === "year"
-      ? prisma.$queryRaw<{ label: string; total: number; count: number }[]>`
-          SELECT
-            TO_CHAR(DATE_TRUNC('month', "createdAt"), 'Mon') AS label,
-            COALESCE(SUM(total), 0)::float AS total,
-            COUNT(*)::int AS count
-          FROM "Venta"
-          WHERE status = 'completed'
-            AND "createdAt" >= ${start}
-            AND "createdAt" <= ${end}
-          GROUP BY DATE_TRUNC('month', "createdAt")
-          ORDER BY DATE_TRUNC('month', "createdAt") ASC
-        `
-      : prisma.$queryRaw<{ label: string; total: number; count: number }[]>`
-          SELECT
-            TO_CHAR(DATE("createdAt"), 'DD Mon') AS label,
-            COALESCE(SUM(total), 0)::float AS total,
-            COUNT(*)::int AS count
-          FROM "Venta"
-          WHERE status = 'completed'
-            AND "createdAt" >= ${start}
-            AND "createdAt" <= ${end}
-          GROUP BY DATE("createdAt")
-          ORDER BY DATE("createdAt") ASC
-        `,
-  ])
-
-  // Resolve product names
-  const productIds = topProductsRaw.map((p: { productId: string }) => p.productId)
-  const productsInfo = productIds.length
-    ? await prisma.producto.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, name: true },
-      })
-    : []
-  const productMap = Object.fromEntries(productsInfo.map((p: { id: string; name: string }) => [p.id, p.name]))
-
-  // Resolve client names
-  const clientIds = topClientsRaw
-    .map((c: { clientId: string | null }) => c.clientId)
-    .filter(Boolean) as string[]
-  const clientsInfo = clientIds.length
-    ? await prisma.cliente.findMany({
-        where: { id: { in: clientIds } },
-        select: { id: true, firstName: true, lastName: true },
-      })
-    : []
-  const clientMap = Object.fromEntries(
-    clientsInfo.map((c: { id: string; firstName: string; lastName: string | null }) => [
-      c.id,
-      `${c.firstName} ${c.lastName ?? ""}`.trim(),
-    ])
-  )
-
-  return {
-    salesAgg,
-    servicesAgg,
-    topProducts: topProductsRaw.map((p: { productId: string; _sum: { quantity: number | null } }) => ({
-      name: productMap[p.productId] ?? "—",
-      quantity: p._sum.quantity ?? 0,
-    })),
-    topClients: topClientsRaw.map((c: { clientId: string | null; _sum: { total: unknown }; _count: number }) => ({
-      name: clientMap[c.clientId!] ?? "Anónimo",
-      total: Number(c._sum.total ?? 0),
-      count: c._count,
-    })),
-    lowStock,
-    chartData: chartRaw as { label: string; total: number; count: number }[],
-  }
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
-
-export default async function ReportesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ period?: string; from?: string; to?: string }>
-}) {
-  const { period = "month", from, to } = await searchParams
   const { start, end } = getDateRange(period, from, to)
-  const data = await getReportData(start, end, period)
+  const store = useDemoStore()
 
-  const ventasTotal = Number(data.salesAgg._sum.total ?? 0)
-  const serviciosTotal = Number(data.servicesAgg._sum.amount ?? 0)
+  const inRange = (date: Date | string) => {
+    const d = new Date(date)
+    return d >= start && d <= end
+  }
+
+  const completedVentas = store.ventas.filter(
+    (v) => v.status === "completed" && inRange(v.createdAt)
+  )
+  const ventasTotal = completedVentas.reduce((acc, v) => acc + Number(v.total), 0)
+
+  const serviciosInRange = store.servicios.filter((s) => inRange(s.serviceDate))
+  const serviciosTotal = serviciosInRange.reduce((acc, s) => acc + Number(s.amount), 0)
   const ingresoTotal = ventasTotal + serviciosTotal
+
+  const lowStock = store.productos
+    .filter((p) => p.active && p.stock <= p.minStock)
+    .sort((a, b) => a.stock - b.stock)
+    .map((p) => ({
+      ...p,
+      category: store.categorias.find((c) => c.id === p.categoryId)!,
+    }))
+
+  // Top productos: sum qty sold per product in range
+  const ventaIds = new Set(completedVentas.map((v) => v.id))
+  const detallesInRange = store.detallesVenta.filter((d) => ventaIds.has(d.saleId))
+  const productQtyMap = new Map<string, number>()
+  for (const d of detallesInRange) {
+    productQtyMap.set(d.productId, (productQtyMap.get(d.productId) ?? 0) + d.quantity)
+  }
+  const topProducts = [...productQtyMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([productId, quantity]) => ({
+      name: store.productos.find((p) => p.id === productId)?.name ?? "—",
+      quantity,
+    }))
+
+  // Top clientes: sum total per client in range
+  const clientTotalMap = new Map<string, { total: number; count: number }>()
+  for (const v of completedVentas) {
+    if (!v.clientId) continue
+    const prev = clientTotalMap.get(v.clientId) ?? { total: 0, count: 0 }
+    clientTotalMap.set(v.clientId, { total: prev.total + Number(v.total), count: prev.count + 1 })
+  }
+  const topClients = [...clientTotalMap.entries()]
+    .sort((a, b) => b[1].total - a[1].total)
+    .slice(0, 8)
+    .map(([clientId, data]) => {
+      const c = store.clientes.find((cl) => cl.id === clientId)
+      return {
+        name: c ? `${c.firstName} ${c.lastName ?? ""}`.trim() : "Anónimo",
+        total: data.total,
+        count: data.count,
+      }
+    })
+
+  // Chart data
+  const chartData: { label: string; total: number; count: number }[] = []
+  if (period === "year") {
+    const monthMap = new Map<string, { total: number; count: number }>()
+    for (const v of completedVentas) {
+      const d = new Date(v.createdAt)
+      const label = format(d, "MMM", { locale: es })
+      const prev = monthMap.get(label) ?? { total: 0, count: 0 }
+      monthMap.set(label, { total: prev.total + Number(v.total), count: prev.count + 1 })
+    }
+    for (const [label, data] of monthMap) chartData.push({ label, ...data })
+  } else {
+    const dayMap = new Map<string, { total: number; count: number }>()
+    for (const v of completedVentas) {
+      const d = new Date(v.createdAt)
+      const label = format(d, "dd MMM", { locale: es })
+      const prev = dayMap.get(label) ?? { total: 0, count: 0 }
+      dayMap.set(label, { total: prev.total + Number(v.total), count: prev.count + 1 })
+    }
+    for (const [label, data] of dayMap) chartData.push({ label, ...data })
+    chartData.sort((a, b) => a.label.localeCompare(b.label))
+  }
 
   const kpiCards = [
     {
       label: "Ventas",
       value: `$${ventasTotal.toLocaleString("es-AR")}`,
-      sub: `${data.salesAgg._count} transacciones`,
+      sub: `${completedVentas.length} transacciones`,
       gradient: "bg-linear-to-br from-yellow-400 to-yellow-500",
       shadow: "shadow-lg shadow-yellow-400/30",
       icon: "TrendingUp" as const,
@@ -195,7 +148,7 @@ export default async function ReportesPage({
     {
       label: "Servicios",
       value: `$${serviciosTotal.toLocaleString("es-AR")}`,
-      sub: `${data.servicesAgg._count} servicios`,
+      sub: `${serviciosInRange.length} servicios`,
       gradient: "bg-linear-to-br from-zinc-800 to-zinc-950",
       shadow: "shadow-lg shadow-black/40",
       icon: "Wrench" as const,
@@ -211,7 +164,7 @@ export default async function ReportesPage({
     },
     {
       label: "Stock bajo",
-      value: String(data.lowStock.length),
+      value: String(lowStock.length),
       sub: "Requieren reposición",
       gradient: "bg-linear-to-br from-rose-500 to-red-600",
       shadow: "shadow-lg shadow-rose-500/30",
@@ -219,8 +172,8 @@ export default async function ReportesPage({
     },
   ]
 
-  const maxProduct = Math.max(...data.topProducts.map((p: { quantity: number }) => p.quantity), 1)
-  const maxClient = Math.max(...data.topClients.map((c: { total: number }) => c.total), 1)
+  const maxProduct = Math.max(...topProducts.map((p) => p.quantity), 1)
+  const maxClient = Math.max(...topClients.map((c) => c.total), 1)
 
   return (
     <div className="space-y-6">
@@ -232,10 +185,8 @@ export default async function ReportesPage({
         <PeriodSelector currentPeriod={period} currentFrom={from} currentTo={to} />
       </div>
 
-      {/* KPI cards */}
       <ReporteKPICards cards={kpiCards} />
 
-      {/* Chart */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b">
           <h2 className="text-sm font-semibold">Ventas por período</h2>
@@ -244,29 +195,25 @@ export default async function ReportesPage({
           </p>
         </div>
         <div className="p-5">
-          <ReporteVentasChart data={data.chartData} />
+          <ReporteVentasChart data={chartData} />
         </div>
       </div>
 
-      {/* Top productos + Top clientes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Productos */}
         <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold">Top productos vendidos</h2>
-            <Badge variant="secondary">{data.topProducts.length}</Badge>
+            <Badge variant="secondary">{topProducts.length}</Badge>
           </div>
           <div className="p-5 space-y-4">
-            {data.topProducts.length === 0 ? (
+            {topProducts.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin datos en el período.</p>
             ) : (
-              data.topProducts.map((p: { name: string; quantity: number }, i: number) => (
+              topProducts.map((p, i) => (
                 <div key={i} className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-bold text-muted-foreground w-4 text-right">
-                        {i + 1}
-                      </span>
+                      <span className="text-xs font-bold text-muted-foreground w-4 text-right">{i + 1}</span>
                       <span className="text-sm font-medium truncate max-w-45">{p.name}</span>
                     </div>
                     <span className="text-sm font-semibold tabular-nums text-yellow-600 dark:text-yellow-400">
@@ -285,23 +232,20 @@ export default async function ReportesPage({
           </div>
         </div>
 
-        {/* Top Clientes */}
         <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b flex items-center justify-between">
             <h2 className="text-sm font-semibold">Mejores clientes</h2>
-            <Badge variant="secondary">{data.topClients.length}</Badge>
+            <Badge variant="secondary">{topClients.length}</Badge>
           </div>
           <div className="p-5 space-y-4">
-            {data.topClients.length === 0 ? (
+            {topClients.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sin datos en el período.</p>
             ) : (
-              data.topClients.map((c: { name: string; total: number; count: number }, i: number) => (
+              topClients.map((c, i) => (
                 <div key={i} className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-bold text-muted-foreground w-4 text-right">
-                        {i + 1}
-                      </span>
+                      <span className="text-xs font-bold text-muted-foreground w-4 text-right">{i + 1}</span>
                       <span className="text-sm font-medium truncate max-w-40">{c.name}</span>
                     </div>
                     <div className="text-right">
@@ -324,22 +268,21 @@ export default async function ReportesPage({
         </div>
       </div>
 
-      {/* Stock bajo */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b flex items-center justify-between">
           <h2 className="text-sm font-semibold">Productos con stock bajo</h2>
-          {data.lowStock.length > 0 && (
-            <Badge variant="destructive">{data.lowStock.length} productos</Badge>
+          {lowStock.length > 0 && (
+            <Badge variant="destructive">{lowStock.length} productos</Badge>
           )}
         </div>
         <div className="p-2">
-          {data.lowStock.length === 0 ? (
+          {lowStock.length === 0 ? (
             <p className="text-sm text-muted-foreground px-3 py-4">
               Todos los productos tienen stock suficiente.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
-              {(data.lowStock as (Producto & { category: Categoria })[]).map((p) => (
+              {lowStock.map((p) => (
                 <Link
                   key={p.id}
                   href={`/stock/${p.id}`}
@@ -359,5 +302,13 @@ export default async function ReportesPage({
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ReportesPage() {
+  return (
+    <Suspense>
+      <ReportesPageInner />
+    </Suspense>
   )
 }

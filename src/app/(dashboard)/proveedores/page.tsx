@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,43 +12,40 @@ import {
 } from "@/components/ui/table"
 import { PaginationNav } from "@/components/ui/pagination-nav"
 import { Plus, Phone, Truck, Package, ShoppingBag } from "lucide-react"
-import type { Proveedor } from "@/types"
 
 const PAGE_SIZE = 10
 
-export default async function ProveedoresPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string; page?: string }>
-}) {
-  const { search = "", page = "1" } = await searchParams
-  const pageNum = Math.max(1, parseInt(page))
+function ProveedoresPageInner() {
+  const searchParams = useSearchParams()
+  const search = searchParams.get("search") ?? ""
+  const pageNum = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
   const skip = (pageNum - 1) * PAGE_SIZE
 
-  const where = {
-    active: true,
-    ...(search && {
-      OR: [
-        { name: { contains: search, mode: "insensitive" as const } },
-        { contactName: { contains: search, mode: "insensitive" as const } },
-      ],
-    }),
-  }
+  const store = useDemoStore()
 
-  const [suppliers, total, totalProducts, totalPurchases] = await Promise.all([
-    prisma.proveedor.findMany({
-      where,
-      include: {
-        _count: { select: { purchases: true, productLinks: true } },
-      },
-      orderBy: { name: "asc" },
-      skip,
-      take: PAGE_SIZE,
-    }),
-    prisma.proveedor.count({ where }),
-    prisma.proveedorProducto.count(),
-    prisma.compra.count(),
-  ])
+  const filtered = store.proveedores
+    .filter((s) => {
+      if (!s.active) return false
+      if (!search) return true
+      const q = search.toLowerCase()
+      return (
+        s.name.toLowerCase().includes(q) ||
+        (s.contactName ?? "").toLowerCase().includes(q)
+      )
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const total = filtered.length
+  const totalProducts = store.proveedorProductos.length
+  const totalPurchases = store.compras.length
+
+  const suppliers = filtered.slice(skip, skip + PAGE_SIZE).map((s) => ({
+    ...s,
+    _count: {
+      purchases: store.compras.filter((c) => c.supplierId === s.id).length,
+      productLinks: store.proveedorProductos.filter((pp) => pp.supplierId === s.id).length,
+    },
+  }))
 
   const paginationParams: Record<string, string> = {}
   if (search) paginationParams.search = search
@@ -130,7 +129,7 @@ export default async function ProveedoresPage({
                 </TableCell>
               </TableRow>
             )}
-            {suppliers.map((s: Proveedor & { _count: { purchases: number; productLinks: number } }) => (
+            {suppliers.map((s) => (
               <TableRow key={s.id}>
                 <TableCell className="font-medium">{s.name}</TableCell>
                 <TableCell className="text-muted-foreground">{s.contactName ?? "—"}</TableCell>
@@ -164,5 +163,13 @@ export default async function ProveedoresPage({
         />
       </div>
     </div>
+  )
+}
+
+export default function ProveedoresPage() {
+  return (
+    <Suspense>
+      <ProveedoresPageInner />
+    </Suspense>
   )
 }

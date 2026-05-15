@@ -1,44 +1,49 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { use } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { VehiculoForm } from "@/components/vehiculos/VehiculoForm"
 import { Plus, Car, Wrench, CalendarDays, Gauge } from "lucide-react"
-import type { Servicio, ServicioProducto, Producto } from "@/types"
 
-export default async function VehiculoDetailPage({
+export default function VehiculoDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const [vehicle, clients] = await Promise.all([
-    prisma.vehiculo.findUnique({
-      where: { id },
-      include: {
-        client: true,
-        services: {
-          include: { products: { include: { product: true } } },
-          orderBy: { serviceDate: "desc" },
-        },
-      },
-    }),
-    prisma.cliente.findMany({
-      where: { active: true },
-      select: { id: true, firstName: true, lastName: true },
-      orderBy: { firstName: "asc" },
-    }),
-  ])
+  const vehicle = store.vehiculos.find((v) => v.id === id)
+  if (!vehicle) { notFound(); return null }
 
-  if (!vehicle) notFound()
+  const client = vehicle.clientId ? store.clientes.find((c) => c.id === vehicle.clientId) ?? null : null
+  const services = store.servicios
+    .filter((s) => s.vehicleId === id)
+    .sort((a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime())
+    .map((s) => ({
+      ...s,
+      products: store.servicioProductos
+        .filter((sp) => sp.serviceId === s.id)
+        .map((sp) => ({
+          ...sp,
+          product: store.productos.find((p) => p.id === sp.productId)!,
+        })),
+    }))
 
-  const lastService = vehicle.services[0]
-  const totalAmount = vehicle.services.reduce((acc, s) => acc + Number(s.amount), 0)
+  const clients = store.clientes
+    .filter((c) => c.active)
+    .sort((a, b) => a.firstName.localeCompare(b.firstName))
+    .map((c) => ({ id: c.id, firstName: c.firstName, lastName: c.lastName }))
+
+  const lastService = services[0]
+  const totalAmount = services.reduce((acc, s) => acc + Number(s.amount), 0)
+
+  const vehicleWithClient = { ...vehicle, client }
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -66,7 +71,7 @@ export default async function VehiculoDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Servicios</p>
-            <p className="text-lg font-bold tabular-nums">{vehicle.services.length}</p>
+            <p className="text-lg font-bold tabular-nums">{services.length}</p>
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
@@ -113,9 +118,9 @@ export default async function VehiculoDetailPage({
         )}
         <div>
           <p className="text-xs text-muted-foreground mb-0.5">Cliente</p>
-          {vehicle.client ? (
-            <Link href={`/clientes/${vehicle.client.id}`} className="font-medium hover:underline text-yellow-600 dark:text-yellow-400">
-              {vehicle.client.firstName} {vehicle.client.lastName ?? ""}
+          {client ? (
+            <Link href={`/clientes/${client.id}`} className="font-medium hover:underline text-yellow-600 dark:text-yellow-400">
+              {client.firstName} {client.lastName ?? ""}
             </Link>
           ) : (
             <span className="text-muted-foreground">Sin asignar</span>
@@ -125,17 +130,17 @@ export default async function VehiculoDetailPage({
 
       <Tabs defaultValue="servicios">
         <TabsList>
-          <TabsTrigger value="servicios">Servicios ({vehicle.services.length})</TabsTrigger>
+          <TabsTrigger value="servicios">Servicios ({services.length})</TabsTrigger>
           <TabsTrigger value="editar">Editar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="servicios" className="mt-4 space-y-2">
-          {vehicle.services.length === 0 ? (
+          {services.length === 0 ? (
             <div className="rounded-xl border bg-card px-5 py-10 text-center text-muted-foreground text-sm">
               Sin servicios registrados.
             </div>
           ) : (
-            vehicle.services.map((s: Servicio & { products: (ServicioProducto & { product: Producto })[] }) => (
+            services.map((s) => (
               <div key={s.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <p className="font-medium text-sm">
@@ -164,7 +169,10 @@ export default async function VehiculoDetailPage({
         </TabsContent>
 
         <TabsContent value="editar" className="mt-4">
-          <VehiculoForm vehicle={vehicle} clients={clients} />
+          <VehiculoForm
+            vehicle={vehicleWithClient as unknown as Parameters<typeof VehiculoForm>[0]["vehicle"]}
+            clients={clients}
+          />
         </TabsContent>
       </Tabs>
     </div>

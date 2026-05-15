@@ -1,8 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { use } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,38 +11,38 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ClienteForm } from "@/components/clientes/ClienteForm"
 import { WhatsAppButton } from "@/components/clientes/WhatsAppButton"
 import { User, Car, Plus, Wrench, ShoppingCart, Phone, Mail } from "lucide-react"
-import type { Vehiculo, Servicio, Venta } from "@/types"
 
-export default async function ClienteDetailPage({
+export default function ClienteDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const client = await prisma.cliente.findUnique({
-    where: { id },
-    include: {
-      vehicles: true,
-      sales: {
-        orderBy: { createdAt: "desc" },
-        take: 10,
-      },
-    },
-  })
+  const client = store.clientes.find((c) => c.id === id)
+  if (!client) { notFound(); return null }
 
-  if (!client) notFound()
+  const vehicles = store.vehiculos.filter((v) => v.clientId === id)
+  const vehicleIds = new Set(vehicles.map((v) => v.id))
 
-  const clientServices = await prisma.servicio.findMany({
-    where: { vehicle: { clientId: id } },
-    include: { vehicle: true },
-    orderBy: { serviceDate: "desc" },
-    take: 10,
-  })
+  const clientServices = store.servicios
+    .filter((s) => s.vehicleId && vehicleIds.has(s.vehicleId))
+    .sort((a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime())
+    .slice(0, 10)
+    .map((s) => ({
+      ...s,
+      vehicle: store.vehiculos.find((v) => v.id === s.vehicleId) ?? null,
+    }))
+
+  const sales = store.ventas
+    .filter((v) => v.clientId === id)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10)
 
   const totalServiceAmount = clientServices.reduce((acc, s) => acc + Number(s.amount), 0)
-  const totalSaleAmount = client.sales
-    .filter(s => s.status === "completed")
+  const totalSaleAmount = sales
+    .filter((s) => s.status === "completed")
     .reduce((acc, s) => acc + Number(s.total), 0)
 
   return (
@@ -73,7 +74,7 @@ export default async function ClienteDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Vehículos</p>
-            <p className="text-lg font-bold tabular-nums">{client.vehicles.length}</p>
+            <p className="text-lg font-bold tabular-nums">{vehicles.length}</p>
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
@@ -91,7 +92,7 @@ export default async function ClienteDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Compras</p>
-            <p className="text-lg font-bold tabular-nums">{client.sales.length}</p>
+            <p className="text-lg font-bold tabular-nums">{sales.length}</p>
           </div>
         </div>
       </div>
@@ -132,9 +133,9 @@ export default async function ClienteDetailPage({
 
       <Tabs defaultValue="vehiculos">
         <TabsList>
-          <TabsTrigger value="vehiculos">Vehículos ({client.vehicles.length})</TabsTrigger>
+          <TabsTrigger value="vehiculos">Vehículos ({vehicles.length})</TabsTrigger>
           <TabsTrigger value="servicios">Servicios ({clientServices.length})</TabsTrigger>
-          <TabsTrigger value="ventas">Compras ({client.sales.length})</TabsTrigger>
+          <TabsTrigger value="ventas">Compras ({sales.length})</TabsTrigger>
           <TabsTrigger value="editar">Editar</TabsTrigger>
         </TabsList>
 
@@ -146,12 +147,12 @@ export default async function ClienteDetailPage({
               </Link>
             </Button>
           </div>
-          {client.vehicles.length === 0 ? (
+          {vehicles.length === 0 ? (
             <div className="rounded-xl border bg-card px-5 py-10 text-center text-muted-foreground text-sm">
               Sin vehículos registrados.
             </div>
           ) : (
-            client.vehicles.map((v: Vehiculo) => (
+            vehicles.map((v) => (
               <div key={v.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <span className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm">
@@ -176,7 +177,7 @@ export default async function ClienteDetailPage({
               Sin servicios registrados.
             </div>
           ) : (
-            clientServices.map((s: Servicio & { vehicle: Vehiculo | null }) => (
+            clientServices.map((s) => (
               <div key={s.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <div className="flex items-center gap-2">
@@ -207,12 +208,12 @@ export default async function ClienteDetailPage({
         </TabsContent>
 
         <TabsContent value="ventas" className="mt-4 space-y-2">
-          {client.sales.length === 0 ? (
+          {sales.length === 0 ? (
             <div className="rounded-xl border bg-card px-5 py-10 text-center text-muted-foreground text-sm">
               Sin compras registradas.
             </div>
           ) : (
-            client.sales.map((v: Venta) => (
+            sales.map((v) => (
               <div key={v.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <p className="text-sm text-muted-foreground">
                   {new Date(v.createdAt).toLocaleDateString("es-AR")}
@@ -229,7 +230,7 @@ export default async function ClienteDetailPage({
         </TabsContent>
 
         <TabsContent value="editar" className="mt-4">
-          <ClienteForm client={client} />
+          <ClienteForm client={client as unknown as Parameters<typeof ClienteForm>[0]["client"]} />
         </TabsContent>
       </Tabs>
     </div>

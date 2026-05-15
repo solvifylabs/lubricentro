@@ -1,14 +1,13 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { ProductoForm } from "@/components/stock/ProductoForm"
 
-export default async function NuevoProductoPage() {
-  const [categories, brands] = await Promise.all([
-    prisma.categoria.findMany({ orderBy: { name: "asc" } }),
-    prisma.marca.findMany({ orderBy: { name: "asc" } }),
-  ])
+export default function NuevoProductoPage() {
+  const store = useDemoStore()
+  const categories = [...store.categorias].sort((a, b) => a.name.localeCompare(b.name))
+  const brands = [...store.marcas].sort((a, b) => a.name.localeCompare(b.name))
 
   return (
     <div className="container">

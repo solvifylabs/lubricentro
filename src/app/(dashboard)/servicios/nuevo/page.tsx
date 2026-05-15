@@ -1,41 +1,49 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
-import prisma from "@/lib/prisma"
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { ServicioForm } from "@/components/servicios/ServicioForm"
 
-export default async function NuevoServicioPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ vehicleId?: string }>
-}) {
-  const { vehicleId } = await searchParams
+function NuevoServicioPageInner() {
+  const searchParams = useSearchParams()
+  const vehicleId = searchParams.get("vehicleId") ?? undefined
 
-  const [vehicles, products, serviceConfig] = await Promise.all([
-    prisma.vehiculo.findMany({
-      orderBy: { plate: "asc" },
-      include: {
-        client: { select: { id: true, firstName: true, lastName: true } },
-      },
-    }),
-    prisma.producto.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.configServicio.findFirst(),
-  ])
+  const store = useDemoStore()
 
-  const defaultServicePrice = serviceConfig ? Number(serviceConfig.servicePrice) : 0
+  const vehicles = [...store.vehiculos]
+    .sort((a, b) => a.plate.localeCompare(b.plate))
+    .map((v) => ({
+      ...v,
+      client: v.clientId
+        ? store.clientes.find((c) => c.id === v.clientId) ?? null
+        : null,
+    }))
+
+  const products = store.productos
+    .filter((p) => p.active)
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const defaultServicePrice = Number(store.configServicio.servicePrice)
 
   return (
     <div className="container">
       <PageHeader title="Nuevo servicio" />
       <ServicioForm
-        vehicles={vehicles}
-        products={products}
+        vehicles={vehicles as unknown as Parameters<typeof ServicioForm>[0]["vehicles"]}
+        products={products as unknown as Parameters<typeof ServicioForm>[0]["products"]}
         defaultVehicleId={vehicleId}
         defaultServicePrice={defaultServicePrice}
       />
     </div>
+  )
+}
+
+export default function NuevoServicioPage() {
+  return (
+    <Suspense>
+      <NuevoServicioPageInner />
+    </Suspense>
   )
 }

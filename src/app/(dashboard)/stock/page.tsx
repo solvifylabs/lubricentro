@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,42 +13,35 @@ import {
 import { PaginationNav } from "@/components/ui/pagination-nav"
 import { Plus, Package, AlertTriangle, LayoutGrid } from "lucide-react"
 import { StockSearch } from "@/components/stock/StockSearch"
-import type { Producto, Categoria, Marca } from "@/types"
 
 const PAGE_SIZE = 10
 
-export default async function StockPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string; categoryId?: string; page?: string }>
-}) {
-  const { search = "", categoryId = "", page = "1" } = await searchParams
-  const pageNum = Math.max(1, parseInt(page))
+function StockPageInner() {
+  const searchParams = useSearchParams()
+  const search = searchParams.get("search") ?? ""
+  const categoryId = searchParams.get("categoryId") ?? ""
+  const pageNum = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
   const skip = (pageNum - 1) * PAGE_SIZE
 
-  const where = {
-    active: true,
-    ...(search && {
-      OR: [
-        { name: { contains: search, mode: "insensitive" as const } },
-        { code: { contains: search, mode: "insensitive" as const } },
-      ],
-    }),
-    ...(categoryId && { categoryId }),
-  }
+  const store = useDemoStore()
 
-  const [products, total, lowStockCount, categories] = await Promise.all([
-    prisma.producto.findMany({
-      where,
-      include: { category: true, brand: true },
-      orderBy: { name: "asc" },
-      skip,
-      take: PAGE_SIZE,
-    }),
-    prisma.producto.count({ where }),
-    prisma.producto.count({ where: { active: true, stock: { lte: 5 } } }),
-    prisma.categoria.findMany({ orderBy: { name: "asc" } }),
-  ])
+  const filtered = store.productos.filter((p) => {
+    if (!p.active) return false
+    if (categoryId && p.categoryId !== categoryId) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return p.name.toLowerCase().includes(q) || (p.code ?? "").toLowerCase().includes(q)
+  }).sort((a, b) => a.name.localeCompare(b.name))
+
+  const total = filtered.length
+  const lowStockCount = store.productos.filter((p) => p.active && p.stock <= p.minStock).length
+  const categories = [...store.categorias].sort((a, b) => a.name.localeCompare(b.name))
+
+  const products = filtered.slice(skip, skip + PAGE_SIZE).map((p) => ({
+    ...p,
+    category: store.categorias.find((c) => c.id === p.categoryId)!,
+    brand: p.brandId ? store.marcas.find((m) => m.id === p.brandId) ?? null : null,
+  }))
 
   const paginationParams: Record<string, string> = {}
   if (search) paginationParams.search = search
@@ -133,7 +128,7 @@ export default async function StockPage({
                 </TableCell>
               </TableRow>
             )}
-            {products.map((p: Producto & { category: Categoria; brand: Marca | null }) => (
+            {products.map((p) => (
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell className="text-muted-foreground font-mono text-xs">{p.code ?? "—"}</TableCell>
@@ -163,5 +158,13 @@ export default async function StockPage({
         <PaginationNav total={total} page={pageNum} pageSize={PAGE_SIZE} basePath="/stock" params={paginationParams} />
       </div>
     </div>
+  )
+}
+
+export default function StockPage() {
+  return (
+    <Suspense>
+      <StockPageInner />
+    </Suspense>
   )
 }

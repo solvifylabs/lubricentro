@@ -1,26 +1,25 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+"use client"
+
 import type { Role } from "@/lib/auth/roles"
 import { Users } from "lucide-react"
 import { RoleSelector } from "./RoleSelector"
 
-export default async function AdminUsuariosPage() {
-  const { data, error } = await createAdminClient().auth.admin.listUsers()
+const DEMO_USERS = [
+  {
+    id: "demo-admin",
+    email: "admin@lubricentro.demo",
+    role: "admin" as Role,
+    createdAt: "2025-01-15T10:00:00Z",
+  },
+  {
+    id: "demo-owner",
+    email: "encargado@lubricentro.demo",
+    role: "owner" as Role,
+    createdAt: "2025-02-01T09:00:00Z",
+  },
+]
 
-  if (error) {
-    return (
-      <p className="text-sm text-red-400">
-        No se pudieron cargar los usuarios.
-      </p>
-    )
-  }
-
-  const users = data.users.map((u) => ({
-    id: u.id,
-    email: u.email ?? "(sin email)",
-    role: (u.app_metadata?.role as Role) ?? null,
-    createdAt: u.created_at,
-  }))
-
+export default function AdminUsuariosPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -41,7 +40,7 @@ export default async function AdminUsuariosPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/8">
-            {users.map((u) => (
+            {DEMO_USERS.map((u) => (
               <tr key={u.id} className="hover:bg-white/2 transition-colors">
                 <td className="px-4 py-3 text-white font-mono text-xs">
                   {u.email}

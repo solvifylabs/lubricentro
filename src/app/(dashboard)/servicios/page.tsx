@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,61 +13,50 @@ import {
 import { PaginationNav } from "@/components/ui/pagination-nav"
 import { Plus, Wrench, CalendarClock, DollarSign } from "lucide-react"
 import { WhatsAppButton } from "@/components/clientes/WhatsAppButton"
-import type { Servicio, Vehiculo, Cliente } from "@/types"
 
 const PAGE_SIZE = 10
 
-export default async function ServiciosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string; date?: string; page?: string }>
-}) {
-  const { search = "", date = "", page = "1" } = await searchParams
-  const pageNum = Math.max(1, parseInt(page))
+function ServiciosPageInner() {
+  const searchParams = useSearchParams()
+  const search = searchParams.get("search") ?? ""
+  const date = searchParams.get("date") ?? ""
+  const pageNum = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
   const skip = (pageNum - 1) * PAGE_SIZE
 
+  const store = useDemoStore()
   const today = new Date().toISOString().split("T")[0]
 
-  const where = {
-    ...(search && {
-      OR: [
-        { vehicle: { plate: { contains: search, mode: "insensitive" as const } } },
-        { vehicle: { client: { firstName: { contains: search, mode: "insensitive" as const } } } },
-        { vehicle: { client: { lastName: { contains: search, mode: "insensitive" as const } } } },
-      ],
-    }),
-    ...(date && {
-      serviceDate: {
-        gte: new Date(`${date}T00:00:00`),
-        lte: new Date(`${date}T23:59:59`),
-      },
-    }),
-  }
+  const withJoins = store.servicios.map((s) => {
+    const vehicle = s.vehicleId ? store.vehiculos.find((v) => v.id === s.vehicleId) ?? null : null
+    const client = vehicle?.clientId ? store.clientes.find((c) => c.id === vehicle.clientId) ?? null : null
+    return { ...s, vehicle: vehicle ? { ...vehicle, client } : null }
+  })
 
-  const todayWhere = {
-    serviceDate: {
-      gte: new Date(`${today}T00:00:00`),
-      lte: new Date(`${today}T23:59:59`),
-    },
-  }
+  const filtered = withJoins.filter((s) => {
+    if (date) {
+      const sDate = new Date(s.serviceDate).toISOString().split("T")[0]
+      if (sDate !== date) return false
+    }
+    if (search) {
+      const q = search.toLowerCase()
+      const plate = s.vehicle?.plate.toLowerCase() ?? ""
+      const first = s.vehicle?.client?.firstName.toLowerCase() ?? ""
+      const last = s.vehicle?.client?.lastName?.toLowerCase() ?? ""
+      if (!plate.includes(q) && !first.includes(q) && !last.includes(q)) return false
+    }
+    return true
+  }).sort((a, b) => new Date(b.serviceDate).getTime() - new Date(a.serviceDate).getTime())
 
-  const [services, total, todayCount, todayAggregate, totalCount] = await Promise.all([
-    prisma.servicio.findMany({
-      where,
-      include: {
-        vehicle: { include: { client: { select: { id: true, firstName: true, lastName: true, phone: true } } } },
-      },
-      orderBy: { serviceDate: "desc" },
-      skip,
-      take: PAGE_SIZE,
-    }),
-    prisma.servicio.count({ where }),
-    prisma.servicio.count({ where: todayWhere }),
-    prisma.servicio.aggregate({ where: todayWhere, _sum: { amount: true } }),
-    prisma.servicio.count(),
-  ])
+  const total = filtered.length
+  const totalCount = store.servicios.length
 
-  const todayTotal = Number(todayAggregate._sum.amount ?? 0)
+  const todayServices = store.servicios.filter(
+    (s) => new Date(s.serviceDate).toISOString().split("T")[0] === today
+  )
+  const todayCount = todayServices.length
+  const todayTotal = todayServices.reduce((acc, s) => acc + Number(s.amount), 0)
+
+  const services = filtered.slice(skip, skip + PAGE_SIZE)
 
   const paginationParams: Record<string, string> = {}
   if (search) paginationParams.search = search
@@ -159,7 +150,7 @@ export default async function ServiciosPage({
                 </TableCell>
               </TableRow>
             )}
-            {services.map((s: Servicio & { vehicle: (Vehiculo & { client: Pick<Cliente, "id" | "firstName" | "lastName" | "phone"> }) | null }) => (
+            {services.map((s) => (
               <TableRow key={s.id}>
                 <TableCell className="text-sm">
                   {new Date(s.serviceDate).toLocaleDateString("es-AR")}
@@ -223,5 +214,13 @@ export default async function ServiciosPage({
         />
       </div>
     </div>
+  )
+}
+
+export default function ServiciosPage() {
+  return (
+    <Suspense>
+      <ServiciosPageInner />
+    </Suspense>
   )
 }

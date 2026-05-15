@@ -1,38 +1,41 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { use } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { WhatsAppButton } from "@/components/clientes/WhatsAppButton"
 import { Car, User, Wrench, Gauge, CalendarDays } from "lucide-react"
-import type { ServicioProducto, Producto, Marca } from "@/types"
 
-export default async function ServicioDetailPage({
+export default function ServicioDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const service = await prisma.servicio.findUnique({
-    where: { id },
-    include: {
-      vehicle: { include: { client: true } },
-      products: { include: { product: { include: { brand: true } } } },
-    },
-  })
+  const service = store.servicios.find((s) => s.id === id)
+  if (!service) { notFound(); return null }
 
-  if (!service) notFound()
+  const vehicle = service.vehicleId ? store.vehiculos.find((v) => v.id === service.vehicleId) ?? null : null
+  const client = vehicle?.clientId ? store.clientes.find((c) => c.id === vehicle.clientId) ?? null : null
 
-  const client = service.vehicle?.client ?? null
+  const products = store.servicioProductos
+    .filter((sp) => sp.serviceId === id)
+    .map((sp) => {
+      const product = store.productos.find((p) => p.id === sp.productId)!
+      const brand = product.brandId ? store.marcas.find((m) => m.id === product.brandId) ?? null : null
+      return { ...sp, product: { ...product, brand } }
+    })
 
   return (
     <div className="container mx-auto">
       <DetailHeader
-        title={`Servicio — ${service.vehicle?.plate ?? "Anónimo"}`}
+        title={`Servicio — ${vehicle?.plate ?? "Anónimo"}`}
         description={new Date(service.serviceDate).toLocaleDateString("es-AR", {
           weekday: "long",
           year: "numeric",
@@ -48,7 +51,7 @@ export default async function ServicioDetailPage({
             <WhatsAppButton
               phone={client.phone}
               label="Avisar próximo service"
-              message={`Hola ${client.firstName}! Tu ${service.vehicle?.brand} ${service.vehicle?.model} (${service.vehicle?.plate}) tiene el próximo service el ${service.nextServiceDate ? new Date(service.nextServiceDate).toLocaleDateString("es-AR") : "próximamente"}${service.nextServiceKm ? ` a los ${service.nextServiceKm.toLocaleString("es-AR")} km` : ""}. ¡Estamos a tu disposición!`}
+              message={`Hola ${client.firstName}! Tu ${vehicle?.brand} ${vehicle?.model} (${vehicle?.plate}) tiene el próximo service el ${service.nextServiceDate ? new Date(service.nextServiceDate).toLocaleDateString("es-AR") : "próximamente"}${service.nextServiceKm ? ` a los ${service.nextServiceKm.toLocaleString("es-AR")} km` : ""}. ¡Estamos a tu disposición!`}
             />
           ) : undefined
         }
@@ -63,13 +66,13 @@ export default async function ServicioDetailPage({
             </div>
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Vehículo</p>
           </div>
-          {service.vehicle ? (
+          {vehicle ? (
             <>
-              <Link href={`/vehiculos/${service.vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline inline-block mb-1">
-                {service.vehicle.plate}
+              <Link href={`/vehiculos/${vehicle.id}`} className="font-mono font-bold text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm hover:underline inline-block mb-1">
+                {vehicle.plate}
               </Link>
-              <p className="text-sm">{service.vehicle.brand} {service.vehicle.model} {service.vehicle.year ? `(${service.vehicle.year})` : ""}</p>
-              {service.vehicle.engine && <p className="text-xs text-muted-foreground">{service.vehicle.engine}</p>}
+              <p className="text-sm">{vehicle.brand} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ""}</p>
+              {vehicle.engine && <p className="text-xs text-muted-foreground">{vehicle.engine}</p>}
             </>
           ) : (
             <p className="text-muted-foreground">Sin vehículo</p>
@@ -141,14 +144,14 @@ export default async function ServicioDetailPage({
       </div>
 
       {/* Products used */}
-      {service.products.length > 0 && (
+      {products.length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b flex items-center gap-2">
             <Wrench className="h-4 w-4 text-muted-foreground" />
             <p className="font-semibold text-sm">Productos utilizados</p>
           </div>
           <div className="px-5 py-4 space-y-3">
-            {service.products.map((item: ServicioProducto & { product: Producto & { brand: Marca | null } }) => (
+            {products.map((item) => (
               <div key={item.id} className="flex items-center justify-between text-sm">
                 <div>
                   <p className="font-medium">

@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,53 +13,40 @@ import {
 } from "@/components/ui/table"
 import { PaginationNav } from "@/components/ui/pagination-nav"
 import { Plus, ShoppingCart, DollarSign, XCircle } from "lucide-react"
-import type { Venta, Cliente } from "@/types"
-
-type SaleRow = Venta & {
-  client: Pick<Cliente, "id" | "firstName" | "lastName"> | null
-  items: { quantity: number; price: unknown; product: { name: string } }[]
-}
 
 const PAGE_SIZE = 15
 
-export default async function VentasPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ date?: string; page?: string }>
-}) {
-  const { date, page = "1" } = await searchParams
+function VentasPageInner() {
+  const searchParams = useSearchParams()
   const today = new Date().toISOString().split("T")[0]
+  const date = searchParams.get("date") ?? ""
   const filterDate = date || today
-  const pageNum = Math.max(1, parseInt(page))
+  const pageNum = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
   const skip = (pageNum - 1) * PAGE_SIZE
 
-  const dateWhere = {
-    createdAt: {
-      gte: new Date(`${filterDate}T00:00:00`),
-      lte: new Date(`${filterDate}T23:59:59`),
-    },
-  }
+  const store = useDemoStore()
 
-  const [sales, total, aggregate, cancelledCount] = await Promise.all([
-    prisma.venta.findMany({
-      where: dateWhere,
-      include: {
-        client: { select: { id: true, firstName: true, lastName: true } },
-        items: { select: { quantity: true, price: true, product: { select: { name: true } } } },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: PAGE_SIZE,
-    }),
-    prisma.venta.count({ where: dateWhere }),
-    prisma.venta.aggregate({
-      where: { ...dateWhere, status: "completed" },
-      _sum: { total: true },
-    }),
-    prisma.venta.count({ where: { ...dateWhere, status: "cancelled" } }),
-  ])
+  const withJoins = store.ventas
+    .filter((v) => new Date(v.createdAt).toISOString().split("T")[0] === filterDate)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .map((v) => ({
+      ...v,
+      client: v.clientId ? store.clientes.find((c) => c.id === v.clientId) ?? null : null,
+      items: store.detallesVenta
+        .filter((d) => d.saleId === v.id)
+        .map((d) => ({
+          ...d,
+          product: store.productos.find((p) => p.id === d.productId)!,
+        })),
+    }))
 
-  const totalDia = Number(aggregate._sum.total ?? 0)
+  const total = withJoins.length
+  const totalDia = withJoins
+    .filter((v) => v.status === "completed")
+    .reduce((acc, v) => acc + Number(v.total), 0)
+  const cancelledCount = withJoins.filter((v) => v.status === "cancelled").length
+
+  const sales = withJoins.slice(skip, skip + PAGE_SIZE)
 
   const paginationParams: Record<string, string> = {}
   if (date) paginationParams.date = date
@@ -141,7 +130,7 @@ export default async function VentasPage({
                 </TableCell>
               </TableRow>
             )}
-            {(sales as SaleRow[]).map((s: SaleRow) => (
+            {sales.map((s) => (
               <TableRow key={s.id} className={s.status === "cancelled" ? "opacity-50" : ""}>
                 <TableCell className="text-sm tabular-nums">
                   {new Date(s.createdAt).toLocaleTimeString("es-AR", {
@@ -189,5 +178,13 @@ export default async function VentasPage({
         />
       </div>
     </div>
+  )
+}
+
+export default function VentasPage() {
+  return (
+    <Suspense>
+      <VentasPageInner />
+    </Suspense>
   )
 }

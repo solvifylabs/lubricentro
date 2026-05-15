@@ -1,33 +1,37 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { LavaAutoForm } from "@/components/lava-auto/LavaAutoForm"
 import type { WashPrices } from "@/types"
 
-export default async function NuevoLavaAutoPage() {
-  const [products, config, vehicles] = await Promise.all([
-    prisma.producto.findMany({
-      where: { active: true, stock: { gt: 0 } },
-      orderBy: { name: "asc" },
-    }),
-    prisma.configLavaAuto.findFirst(),
-    prisma.vehiculo.findMany({
-      include: { client: true },
-      orderBy: { plate: "asc" },
-    }),
-  ])
+export default function NuevoLavaAutoPage() {
+  const store = useDemoStore()
 
-  const washPrices: WashPrices = config
-    ? {
-        priceInterior: Number(config.priceInterior),
-        priceExterior: Number(config.priceExterior),
-        priceIntegro: Number(config.priceIntegro),
-      }
-    : { priceInterior: 0, priceExterior: 0, priceIntegro: 0 }
+  const products = store.productos
+    .filter((p) => p.active && p.stock > 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const config = store.configLavaAuto
+  const washPrices: WashPrices = {
+    priceInterior: Number(config.priceInterior),
+    priceExterior: Number(config.priceExterior),
+    priceIntegro: Number(config.priceIntegro),
+  }
+
+  const vehicles = [...store.vehiculos]
+    .sort((a, b) => a.plate.localeCompare(b.plate))
+    .map((v) => ({
+      ...v,
+      client: v.clientId ? store.clientes.find((c) => c.id === v.clientId) ?? null : null,
+    }))
 
   return (
     <div className="container flex-1 flex flex-col min-h-0 py-6">
-      <LavaAutoForm products={products} washPrices={washPrices} vehicles={vehicles} />
+      <LavaAutoForm
+        products={products as unknown as Parameters<typeof LavaAutoForm>[0]["products"]}
+        washPrices={washPrices}
+        vehicles={vehicles as unknown as Parameters<typeof LavaAutoForm>[0]["vehicles"]}
+      />
     </div>
   )
 }

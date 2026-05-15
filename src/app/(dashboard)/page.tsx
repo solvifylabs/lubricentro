@@ -1,81 +1,52 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { StatsCards } from "@/components/dashboard/StatsCards"
 import { TurnoWidget } from "@/components/lava-auto/TurnoWidget"
-import prisma from "@/lib/prisma"
 import { AlertTriangle, Wrench, ShoppingCart, Plus, Receipt } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-import type { Producto, Marca, Categoria, Servicio, Vehiculo, Cliente, Venta } from "@/types"
+function DashboardPageInner() {
+  const store = useDemoStore()
+  const today = new Date().toISOString().split("T")[0]
 
-async function getStats() {
-  const [totalProducts, lowStock, totalClients, todayServices, todaySales] =
-    await Promise.all([
-      prisma.producto.count({ where: { active: true } }),
-      prisma.producto.count({ where: { active: true, stock: { lte: 5 } } }),
-      prisma.cliente.count({ where: { active: true } }),
-      prisma.servicio.count({
-        where: {
-          serviceDate: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lte: new Date(new Date().setHours(23, 59, 59, 999)),
-          },
-        },
-      }),
-      prisma.venta.count({
-        where: {
-          status: "completed",
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lte: new Date(new Date().setHours(23, 59, 59, 999)),
-          },
-        },
-      }),
-    ])
+  const activeProducts = store.productos.filter((p) => p.active)
+  const lowStockItems = activeProducts
+    .filter((p) => p.stock <= p.minStock)
+    .sort((a, b) => a.stock - b.stock)
+    .slice(0, 5)
 
-  return { totalProducts, lowStock, totalClients, todayServices, todaySales }
-}
+  const todayServices = store.servicios.filter(
+    (s) => new Date(s.serviceDate).toISOString().split("T")[0] === today
+  )
+  const todaySales = store.ventas.filter(
+    (v) => v.status === "completed" && new Date(v.createdAt).toISOString().split("T")[0] === today
+  )
+  const recentServices = [...store.servicios]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+    .map((s) => {
+      const vehicle = store.vehiculos.find((v) => v.id === s.vehicleId) ?? null
+      const client = vehicle ? store.clientes.find((c) => c.id === vehicle.clientId) ?? null : null
+      return { ...s, vehicle: vehicle ? { ...vehicle, client } : null }
+    })
 
-async function getLowStockProducts() {
-  return prisma.producto.findMany({
-    where: { active: true, stock: { lte: 5 } },
-    include: { category: true, brand: true },
-    orderBy: { stock: "asc" },
-    take: 5,
-  })
-}
-
-async function getRecentServices() {
-  return prisma.servicio.findMany({
-    include: { vehicle: { include: { client: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  })
-}
-
-async function getRecentSales() {
-  return prisma.venta.findMany({
-    where: { status: "completed" },
-    include: { client: true },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  })
-}
-
-export default async function DashboardPage() {
-  const [stats, lowStockItems, recentServices, recentSales] = await Promise.all([
-    getStats(),
-    getLowStockProducts(),
-    getRecentServices(),
-    getRecentSales(),
-  ])
+  const recentSales = [...store.ventas]
+    .filter((v) => v.status === "completed")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 6)
+    .map((v) => ({
+      ...v,
+      client: v.clientId ? store.clientes.find((c) => c.id === v.clientId) ?? null : null,
+    }))
 
   const summaryCards = [
     {
       title: "Productos activos",
-      value: stats.totalProducts,
+      value: activeProducts.length,
       icon: "Package" as const,
       href: "/stock",
       gradient: "bg-linear-to-br from-yellow-400 to-yellow-500",
@@ -85,7 +56,7 @@ export default async function DashboardPage() {
     },
     {
       title: "Clientes",
-      value: stats.totalClients,
+      value: store.clientes.filter((c) => c.active).length,
       icon: "Users" as const,
       href: "/clientes",
       gradient: "bg-linear-to-br from-zinc-800 to-zinc-950",
@@ -94,7 +65,7 @@ export default async function DashboardPage() {
     },
     {
       title: "Servicios hoy",
-      value: stats.todayServices,
+      value: todayServices.length,
       icon: "Wrench" as const,
       href: "/servicios",
       gradient: "bg-linear-to-br from-amber-400 to-yellow-500",
@@ -104,7 +75,7 @@ export default async function DashboardPage() {
     },
     {
       title: "Ventas hoy",
-      value: stats.todaySales,
+      value: todaySales.length,
       icon: "ShoppingCart" as const,
       href: "/ventas",
       gradient: "bg-linear-to-br from-gray-800 to-gray-950",
@@ -112,6 +83,12 @@ export default async function DashboardPage() {
       trend: "Completadas hoy",
     },
   ]
+
+  const lowStockWithRelations = lowStockItems.map((p) => ({
+    ...p,
+    category: store.categorias.find((c) => c.id === p.categoryId)!,
+    brand: p.brandId ? store.marcas.find((m) => m.id === p.brandId) ?? null : null,
+  }))
 
   return (
     <div>
@@ -146,12 +123,12 @@ export default async function DashboardPage() {
             )}
           </div>
           <div className="p-2">
-            {lowStockItems.length === 0 ? (
+            {lowStockWithRelations.length === 0 ? (
               <p className="text-sm text-muted-foreground px-3 py-4">
                 No hay productos con stock bajo.
               </p>
             ) : (
-              lowStockItems.map((p: Producto & { category: Categoria; brand: Marca | null }) => (
+              lowStockWithRelations.map((p) => (
                 <Link
                   key={p.id}
                   href={`/stock/${p.id}`}
@@ -186,7 +163,7 @@ export default async function DashboardPage() {
                 No hay servicios registrados.
               </p>
             ) : (
-              recentServices.map((s: Servicio & { vehicle: (Vehiculo & { client: Cliente }) | null }) => (
+              recentServices.map((s) => (
                 <Link
                   key={s.id}
                   href={`/servicios/${s.id}`}
@@ -194,7 +171,9 @@ export default async function DashboardPage() {
                 >
                   <div>
                     <p className="text-sm font-medium leading-tight">
-                      {s.vehicle ? `${s.vehicle.plate} — ${s.vehicle.brand} ${s.vehicle.model}` : "Servicio anónimo"}
+                      {s.vehicle
+                        ? `${s.vehicle.plate} — ${s.vehicle.brand} ${s.vehicle.model}`
+                        : "Servicio anónimo"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {s.vehicle?.client
@@ -233,7 +212,7 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
-                {(recentSales as (Venta & { client: Cliente | null })[]).map((v) => (
+                {recentSales.map((v) => (
                   <Link
                     key={v.id}
                     href={`/ventas/${v.id}`}
@@ -289,5 +268,13 @@ export default async function DashboardPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardPageInner />
+    </Suspense>
   )
 }

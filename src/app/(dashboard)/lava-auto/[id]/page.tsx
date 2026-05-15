@@ -1,34 +1,35 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
-import Link from "next/link"
+import { use } from "react"
 import { notFound } from "next/navigation"
-import prisma from "@/lib/prisma"
+import Link from "next/link"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Separator } from "@/components/ui/separator"
 import { Waves, Car, Package, AlertTriangle } from "lucide-react"
-import type { SesionProducto, Producto } from "@/types"
 
-export default async function LavaAutoDetailPage({
+export default function LavaAutoDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const session = await prisma.sesionLavaAuto.findUnique({
-    where: { id },
-    include: {
-      turno: true,
-      vehicle: { include: { client: true } },
-      products: {
-        include: {
-          product: { include: { brand: true } },
-        },
-      },
-    },
-  })
+  const session = store.sesiones.find((s) => s.id === id)
+  if (!session) { notFound(); return null }
 
-  if (!session) notFound()
+  const turno = session.turnoId ? store.turnos.find((t) => t.id === session.turnoId) ?? null : null
+  const vehicle = session.vehicleId ? store.vehiculos.find((v) => v.id === session.vehicleId) ?? null : null
+  const vehicleClient = vehicle?.clientId ? store.clientes.find((c) => c.id === vehicle.clientId) ?? null : null
+
+  const products = store.sesionProductos
+    .filter((sp) => sp.sessionId === id)
+    .map((sp) => {
+      const product = store.productos.find((p) => p.id === sp.productId)!
+      const brand = product.brandId ? store.marcas.find((m) => m.id === product.brandId) ?? null : null
+      return { ...sp, product: { ...product, brand } }
+    })
 
   const dateLabel = new Date(session.sessionDate).toLocaleDateString("es-AR", {
     weekday: "long",
@@ -69,27 +70,27 @@ export default async function LavaAutoDetailPage({
               <span className="text-muted-foreground italic">Anónimo</span>
             )}
           </div>
-          {session.vehicle && (
+          {vehicle && vehicleClient && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Cliente</span>
               <Link
-                href={`/vehiculos/${session.vehicle.id}`}
+                href={`/vehiculos/${vehicle.id}`}
                 className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
               >
-                {[session.vehicle.client.firstName, session.vehicle.client.lastName].filter(Boolean).join(" ")}
+                {[vehicleClient.firstName, vehicleClient.lastName].filter(Boolean).join(" ")}
               </Link>
             </div>
           )}
-          {session.turno && (
+          {turno && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Turno</span>
               <span className="font-medium">
-                {new Date(session.turno.startedAt).toLocaleTimeString("es-AR", {
+                {new Date(turno.startedAt).toLocaleTimeString("es-AR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
-                {session.turno.endedAt && (
-                  <> — {new Date(session.turno.endedAt).toLocaleTimeString("es-AR", {
+                {turno.endedAt && (
+                  <> — {new Date(turno.endedAt).toLocaleTimeString("es-AR", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}</>
@@ -112,14 +113,14 @@ export default async function LavaAutoDetailPage({
       </div>
 
       {/* Products used + rendimiento */}
-      {session.products.length > 0 && (
+      {products.length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b flex items-center gap-2">
             <Package className="h-4 w-4 text-muted-foreground" />
             <p className="font-semibold text-sm">Productos utilizados</p>
           </div>
           <div className="px-5 py-4 space-y-4">
-            {(session.products as (SesionProducto & { product: Producto & { brand: { name: string } | null } })[]).map((item) => {
+            {products.map((item) => {
               const expected = item.product.expectedConsumptionPerWash
                 ? Number(item.product.expectedConsumptionPerWash)
                 : null
@@ -152,7 +153,7 @@ export default async function LavaAutoDetailPage({
         </div>
       )}
 
-      {session.products.length === 0 && (
+      {products.length === 0 && (
         <div className="rounded-xl border bg-muted/40 px-5 py-8 text-center text-sm text-muted-foreground">
           Sin productos registrados en este lavado.
         </div>

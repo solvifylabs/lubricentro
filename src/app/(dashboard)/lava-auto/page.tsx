@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { Suspense } from "react"
+import { useDemoStore } from "@/lib/demo/store"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,77 +13,59 @@ import {
 import { PaginationNav } from "@/components/ui/pagination-nav"
 import { Plus, Waves, DollarSign, CalendarClock, Package, AlertTriangle } from "lucide-react"
 import { WashPriceConfig } from "@/components/lava-auto/WashPriceConfig"
-import type { SesionLavaAuto, Producto } from "@/types"
 
 const PAGE_SIZE = 20
 
-export default async function LavaAutoPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ date?: string; page?: string }>
-}) {
-  const { date = "", page = "1" } = await searchParams
-  const pageNum = Math.max(1, parseInt(page))
+function LavaAutoPageInner() {
+  const searchParams = useSearchParams()
+  const date = searchParams.get("date") ?? ""
+  const pageNum = Math.max(1, parseInt(searchParams.get("page") ?? "1"))
   const skip = (pageNum - 1) * PAGE_SIZE
 
+  const store = useDemoStore()
   const today = new Date().toISOString().split("T")[0]
   const activeDate = date || today
 
-  const dateFilter = {
-    sessionDate: {
-      gte: new Date(`${activeDate}T00:00:00`),
-      lte: new Date(`${activeDate}T23:59:59`),
-    },
+  const filtered = store.sesiones
+    .filter((s) => new Date(s.sessionDate).toISOString().split("T")[0] === activeDate)
+    .sort((a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime())
+
+  const total = filtered.length
+  const totalCount = store.sesiones.length
+
+  const todaySessions = store.sesiones.filter((s) => new Date(s.sessionDate).toISOString().split("T")[0] === today)
+  const todayCount = todaySessions.length
+  const todayTotal = todaySessions.reduce((acc, s) => acc + Number(s.amount), 0)
+
+  // Daily product consumption for today
+  const todaySessionIds = new Set(todaySessions.map((s) => s.id))
+  const todaySesionProductos = store.sesionProductos.filter((sp) => todaySessionIds.has(sp.sessionId))
+
+  const productConsumptionMap = new Map<string, number>()
+  for (const sp of todaySesionProductos) {
+    productConsumptionMap.set(sp.productId, (productConsumptionMap.get(sp.productId) ?? 0) + sp.quantity)
   }
 
-  const todayFilter = {
-    sessionDate: {
-      gte: new Date(`${today}T00:00:00`),
-      lte: new Date(`${today}T23:59:59`),
-    },
-  }
+  const dailyProducts = [...productConsumptionMap.entries()].map(([productId, qty]) => ({
+    productId,
+    consumed: qty,
+    product: store.productos.find((p) => p.id === productId),
+  }))
 
-  const [sessions, total, todayCount, todayAggregate, totalCount, dailyProducts, config] =
-    await Promise.all([
-      prisma.sesionLavaAuto.findMany({
-        where: dateFilter,
-        include: {
-          _count: { select: { products: true } },
-          vehicle: { select: { id: true, plate: true } },
-        },
-        orderBy: { sessionDate: "desc" },
-        skip,
-        take: PAGE_SIZE,
-      }),
-      prisma.sesionLavaAuto.count({ where: dateFilter }),
-      prisma.sesionLavaAuto.count({ where: todayFilter }),
-      prisma.sesionLavaAuto.aggregate({ where: todayFilter, _sum: { amount: true } }),
-      prisma.sesionLavaAuto.count(),
-      prisma.sesionProducto.groupBy({
-        by: ["productId"],
-        where: { session: todayFilter },
-        _sum: { quantity: true },
-      }),
-      prisma.configLavaAuto.findFirst(),
-    ])
+  const totalProductsUsed = dailyProducts.reduce((acc, dp) => acc + dp.consumed, 0)
 
-  const todayTotal = Number(todayAggregate._sum.amount ?? 0)
+  const config = store.configLavaAuto
   const washPrices = {
-    priceInterior: config ? Number(config.priceInterior) : 0,
-    priceExterior: config ? Number(config.priceExterior) : 0,
-    priceIntegro: config ? Number(config.priceIntegro) : 0,
+    priceInterior: Number(config.priceInterior),
+    priceExterior: Number(config.priceExterior),
+    priceIntegro: Number(config.priceIntegro),
   }
 
-  // Fetch product details for daily consumption
-  const productIds = dailyProducts.map((dp) => dp.productId)
-  const productDetails = productIds.length
-    ? await prisma.producto.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, name: true, expectedConsumptionPerWash: true },
-      })
-    : []
-
-  const productMap = new Map(productDetails.map((p) => [p.id, p]))
+  const sessions = filtered.slice(skip, skip + PAGE_SIZE).map((s) => ({
+    ...s,
+    _count: { products: store.sesionProductos.filter((sp) => sp.sessionId === s.id).length },
+    vehicle: s.vehicleId ? store.vehiculos.find((v) => v.id === s.vehicleId) ?? null : null,
+  }))
 
   const paginationParams: Record<string, string> = {}
   if (date) paginationParams.date = date
@@ -120,9 +104,7 @@ export default async function LavaAutoPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Productos usados hoy</p>
-            <p className="text-lg font-bold tabular-nums">
-              {dailyProducts.reduce((acc, p) => acc + (p._sum.quantity ?? 0), 0)}
-            </p>
+            <p className="text-lg font-bold tabular-nums">{totalProductsUsed}</p>
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
@@ -170,7 +152,7 @@ export default async function LavaAutoPage({
                 </TableCell>
               </TableRow>
             )}
-            {(sessions as (SesionLavaAuto & { _count: { products: number }; vehicle: { id: string; plate: string } | null })[]).map((s) => (
+            {sessions.map((s) => (
               <TableRow key={s.id}>
                 <TableCell className="text-sm text-muted-foreground tabular-nums">
                   {new Date(s.sessionDate).toLocaleTimeString("es-AR", {
@@ -219,7 +201,7 @@ export default async function LavaAutoPage({
         />
       </div>
 
-      {/* Daily product consumption (REQ-LAVA-4) */}
+      {/* Daily product consumption */}
       {dailyProducts.length > 0 && (
         <div className="rounded-xl border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b flex items-center gap-2">
@@ -238,20 +220,16 @@ export default async function LavaAutoPage({
             </TableHeader>
             <TableBody>
               {dailyProducts.map((dp) => {
-                const prod = productMap.get(dp.productId)
-                const consumed = dp._sum.quantity ?? 0
-                const expectedPerWash = prod?.expectedConsumptionPerWash
-                  ? Number(prod.expectedConsumptionPerWash)
+                const expectedPerWash = dp.product?.expectedConsumptionPerWash
+                  ? Number(dp.product.expectedConsumptionPerWash)
                   : null
-                const expectedTotal =
-                  expectedPerWash != null ? expectedPerWash * todayCount : null
-                const isOver =
-                  expectedTotal != null && consumed > expectedTotal * 1.1
+                const expectedTotal = expectedPerWash != null ? expectedPerWash * todayCount : null
+                const isOver = expectedTotal != null && dp.consumed > expectedTotal * 1.1
 
                 return (
                   <TableRow key={dp.productId}>
-                    <TableCell className="font-medium">{prod?.name ?? "—"}</TableCell>
-                    <TableCell className="text-right tabular-nums font-bold">{consumed}</TableCell>
+                    <TableCell className="font-medium">{dp.product?.name ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums font-bold">{dp.consumed}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
                       {expectedPerWash != null ? expectedPerWash : "—"}
                     </TableCell>
@@ -277,5 +255,13 @@ export default async function LavaAutoPage({
         </div>
       )}
     </div>
+  )
+}
+
+export default function LavaAutoPage() {
+  return (
+    <Suspense>
+      <LavaAutoPageInner />
+    </Suspense>
   )
 }

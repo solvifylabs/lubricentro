@@ -1,34 +1,42 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { use } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ProveedorForm } from "@/components/proveedores/ProveedorForm"
 import { Truck, Package, ShoppingBag, Phone, Mail } from "lucide-react"
-import type { ProveedorProducto, Producto, Categoria, Marca, Compra } from "@/types"
 
-export default async function ProveedorDetailPage({
+export default function ProveedorDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const supplier = await prisma.proveedor.findUnique({
-    where: { id },
-    include: {
-      productLinks: { include: { product: { include: { category: true, brand: true } } } },
-      purchases: { orderBy: { createdAt: "desc" }, take: 20 },
-    },
-  })
+  const supplier = store.proveedores.find((s) => s.id === id)
+  if (!supplier) { notFound(); return null }
 
-  if (!supplier) notFound()
+  const productLinks = store.proveedorProductos
+    .filter((pp) => pp.supplierId === id)
+    .map((pp) => {
+      const product = store.productos.find((p) => p.id === pp.productId)!
+      const category = store.categorias.find((c) => c.id === product.categoryId)!
+      const brand = product.brandId ? store.marcas.find((m) => m.id === product.brandId) ?? null : null
+      return { ...pp, product: { ...product, category, brand } }
+    })
 
-  const totalPurchased = supplier.purchases.reduce((acc, p) => acc + Number(p.total), 0)
+  const purchases = store.compras
+    .filter((c) => c.supplierId === id)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 20)
+
+  const totalPurchased = purchases.reduce((acc, p) => acc + Number(p.total), 0)
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -49,7 +57,7 @@ export default async function ProveedorDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Productos</p>
-            <p className="text-lg font-bold tabular-nums">{supplier.productLinks.length}</p>
+            <p className="text-lg font-bold tabular-nums">{productLinks.length}</p>
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
@@ -58,7 +66,7 @@ export default async function ProveedorDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Compras</p>
-            <p className="text-lg font-bold tabular-nums">{supplier.purchases.length}</p>
+            <p className="text-lg font-bold tabular-nums">{purchases.length}</p>
           </div>
         </div>
         <div className="rounded-xl border bg-card px-4 py-3 flex items-center gap-3">
@@ -102,18 +110,18 @@ export default async function ProveedorDetailPage({
 
       <Tabs defaultValue="productos">
         <TabsList>
-          <TabsTrigger value="productos">Productos ({supplier.productLinks.length})</TabsTrigger>
-          <TabsTrigger value="compras">Compras ({supplier.purchases.length})</TabsTrigger>
+          <TabsTrigger value="productos">Productos ({productLinks.length})</TabsTrigger>
+          <TabsTrigger value="compras">Compras ({purchases.length})</TabsTrigger>
           <TabsTrigger value="editar">Editar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="productos" className="mt-4 space-y-2">
-          {supplier.productLinks.length === 0 ? (
+          {productLinks.length === 0 ? (
             <div className="rounded-xl border bg-card px-5 py-10 text-center text-muted-foreground text-sm">
               Sin productos asociados.
             </div>
           ) : (
-            supplier.productLinks.map(({ product }: ProveedorProducto & { product: Producto & { category: Categoria; brand: Marca | null } }) => (
+            productLinks.map(({ product }) => (
               <div key={product.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <p className="font-medium text-sm">{product.name}</p>
@@ -136,12 +144,12 @@ export default async function ProveedorDetailPage({
         </TabsContent>
 
         <TabsContent value="compras" className="mt-4 space-y-2">
-          {supplier.purchases.length === 0 ? (
+          {purchases.length === 0 ? (
             <div className="rounded-xl border bg-card px-5 py-10 text-center text-muted-foreground text-sm">
               Sin compras registradas.
             </div>
           ) : (
-            supplier.purchases.map((purchase: Compra) => (
+            purchases.map((purchase) => (
               <div key={purchase.id} className="rounded-xl border bg-card px-4 py-3 flex items-center justify-between hover:bg-accent/30 transition-colors">
                 <div>
                   <p className="text-sm font-medium">
@@ -158,7 +166,7 @@ export default async function ProveedorDetailPage({
         </TabsContent>
 
         <TabsContent value="editar" className="mt-4">
-          <ProveedorForm supplier={supplier} />
+          <ProveedorForm supplier={supplier as unknown as Parameters<typeof ProveedorForm>[0]["supplier"]} />
         </TabsContent>
       </Tabs>
     </div>

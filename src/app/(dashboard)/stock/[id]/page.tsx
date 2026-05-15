@@ -1,7 +1,8 @@
-export const dynamic = 'force-dynamic'
+"use client"
 
+import { use } from "react"
 import { notFound } from "next/navigation"
-import prisma from "@/lib/prisma"
+import { useDemoStore } from "@/lib/demo/store"
 import { DetailHeader } from "@/components/layout/DetailHeader"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,43 +12,42 @@ import { ProductoForm } from "@/components/stock/ProductoForm"
 import { StockMovimientoForm } from "@/components/stock/StockMovimientoForm"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Package, Tag, Layers, TrendingUp } from "lucide-react"
-import type { MovimientoStock } from "@/types"
 
-export default async function ProductoDetailPage({
+const typeLabel = (type: string) => {
+  if (type === "entry") return { label: "Ingreso", className: "text-yellow-600 font-medium" }
+  if (type === "exit") return { label: "Egreso", className: "text-rose-600 font-medium" }
+  return { label: "Ajuste", className: "text-amber-600 font-medium" }
+}
+
+export default function ProductoDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = use(params)
+  const store = useDemoStore()
 
-  const [product, categories, brands] = await Promise.all([
-    prisma.producto.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        brand: true,
-        stockMovements: { orderBy: { createdAt: "desc" }, take: 30 },
-      },
-    }),
-    prisma.categoria.findMany({ orderBy: { name: "asc" } }),
-    prisma.marca.findMany({ orderBy: { name: "asc" } }),
-  ])
+  const product = store.productos.find((p) => p.id === id)
+  if (!product) { notFound(); return null }
 
-  if (!product) notFound()
+  const category = store.categorias.find((c) => c.id === product.categoryId)!
+  const brand = product.brandId ? store.marcas.find((m) => m.id === product.brandId) ?? null : null
+  const categories = [...store.categorias].sort((a, b) => a.name.localeCompare(b.name))
+  const brands = [...store.marcas].sort((a, b) => a.name.localeCompare(b.name))
+  const movements = store.movimientos
+    .filter((m) => m.productId === id)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 30)
 
   const isLowStock = product.stock <= product.minStock
 
-  const typeLabel = (type: string) => {
-    if (type === "entry") return { label: "Ingreso", className: "text-yellow-600 font-medium" }
-    if (type === "exit") return { label: "Egreso", className: "text-rose-600 font-medium" }
-    return { label: "Ajuste", className: "text-amber-600 font-medium" }
-  }
+  const productWithRelations = { ...product, category, brand, stockMovements: movements }
 
   return (
     <div className="max-w-3xl mx-auto">
       <DetailHeader
         title={product.name}
-        description={`${product.category.name}${product.brand ? ` · ${product.brand.name}` : ""}`}
+        description={`${category.name}${brand ? ` · ${brand.name}` : ""}`}
         backHref="/stock"
         backLabel="Stock"
         icon={Package}
@@ -93,7 +93,7 @@ export default async function ProductoDetailPage({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Movimientos</p>
-            <p className="text-lg font-bold tabular-nums">{product.stockMovements.length}</p>
+            <p className="text-lg font-bold tabular-nums">{movements.length}</p>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ export default async function ProductoDetailPage({
       <Tabs defaultValue="movimiento">
         <TabsList>
           <TabsTrigger value="movimiento">Movimiento de stock</TabsTrigger>
-          <TabsTrigger value="historial">Historial ({product.stockMovements.length})</TabsTrigger>
+          <TabsTrigger value="historial">Historial ({movements.length})</TabsTrigger>
           <TabsTrigger value="editar">Editar</TabsTrigger>
         </TabsList>
 
@@ -143,14 +143,14 @@ export default async function ProductoDetailPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {product.stockMovements.length === 0 && (
+                {movements.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
                       Sin movimientos registrados.
                     </TableCell>
                   </TableRow>
                 )}
-                {product.stockMovements.map((m: MovimientoStock) => {
+                {movements.map((m) => {
                   const t = typeLabel(m.type)
                   return (
                     <TableRow key={m.id}>
@@ -171,7 +171,11 @@ export default async function ProductoDetailPage({
         </TabsContent>
 
         <TabsContent value="editar" className="mt-4">
-          <ProductoForm categories={categories} brands={brands} product={product} />
+          <ProductoForm
+            categories={categories}
+            brands={brands}
+            product={productWithRelations as unknown as Parameters<typeof ProductoForm>[0]["product"]}
+          />
         </TabsContent>
       </Tabs>
     </div>
